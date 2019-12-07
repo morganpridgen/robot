@@ -2,13 +2,15 @@
 #include <cmath>
 
 #define colXOff (6.0f)
+#define limbXOff (3.0f)
+#define limbYOff (3.0f)
 
 bool Robot::init() {
-  //if (!robotTex.load(TXL_DataPath("robot.png"), 16, 16)) return 0;
+  if (!robotTex.load(TXL_DataPath("robot.png"), 24, 16)) return 0;
   info.x = 320.0f, info.y = 180.0f, info.xV = 0.0f, info.yV = 0.0f, info.gY = 0.0f;
   info.grounded = 0;
   info.djCharge = 0;
-  dead = 0;
+  dead = 0, dir = 0;
   return 1;
 }
 
@@ -27,6 +29,8 @@ void Robot::update(TXL_Controller *ctrl, Level &lvl) {
       }
     }
   } else info.xV += info.xV / -8.0f;
+  if (info.xV > 0) dir = 0;
+  if (info.xV < 0) dir = 1;
   
   motionCalc(ctrl);
   for (int i = 0; i < 4; i++) {
@@ -79,6 +83,13 @@ void Robot::colCalc(TXL_Controller *ctrl, Level &lvl) {
   }
   if (!isInFloor(0.0f, 2.0f, lvl)) info.grounded = 0;
   if (lvl.inLethal(info.x, info.y)) dead = 1;
+  if (dir) {
+    rLOff = (!lvl.inFloor(info.x + limbXOff - 1, info.y + 2.0f)) && !lLOff;
+    lLOff = (!lvl.inFloor(info.x - limbXOff + 1, info.y + 2.0f)) && !rLOff;
+  } else {
+    lLOff = (!lvl.inFloor(info.x - limbXOff + 1, info.y + 2.0f)) && !rLOff;
+    rLOff = (!lvl.inFloor(info.x + limbXOff - 1, info.y + 2.0f)) && !lLOff;
+  }
 }
 
 bool Robot::isInFloor(float xOff, float yOff, Level &lvl) {
@@ -86,7 +97,34 @@ bool Robot::isInFloor(float xOff, float yOff, Level &lvl) {
 }
 
 void Robot::render(float cX, float cY) {
-  TXL_RenderQuad(info.x - cX, info.y - cY - colXOff, 16, 16, {0.75f, 0.75f, 0.75f, 1.0f});
+  if (!info.grounded) {
+    lAnim = 0;
+    tLLR = 30.0f, tRLR = -30.0f;
+  } else {
+    if (info.xV > 0.0f) {
+      lAnim += info.xV / 8.0f;
+      tLLR = 30.0f * sin(lAnim * 1.57f / 4.0f);
+      tRLR = 30.0f * cos(lAnim * 1.57f / 4.0f);
+    } else if (info.xV < 0.0f) {
+      lAnim -= info.xV / 8.0f;
+      tLLR = -30.0f * cos(lAnim * 1.57f / 4.0f);
+      tRLR = -30.0f * sin(lAnim * 1.57f / 4.0f);
+    } else {
+      lAnim = 0;
+      tLLR = -30.0f * lLOff;
+      tRLR = 30.0f * rLOff;
+    }
+  }
+  lLR += (tLLR - lLR) / 4.0f;
+  rLR += (tRLR - rLR) / 4.0f;
+  
+  //TXL_RenderQuad(info.x - cX, info.y - cY - colXOff, 16, 16, {0.75f, 0.75f, 0.75f, 1.0f});
+  robotTex.setClip(16, 24, 0, 16);
+  robotTex.render(info.x - cX - limbXOff, info.y - cY - 8 + limbYOff, lLR);
+  robotTex.setClip(24, 16, 0, 16);
+  robotTex.render(info.x - cX + limbXOff, info.y - cY - 8 + limbYOff, rLR);
+  robotTex.setClip(16 * dir, 16 * !dir, 0, 16);
+  robotTex.render(info.x - cX, info.y - cY - 8.0f + (sin(lAnim * 1.57f / 8.0f) + cos(lAnim * 1.57f / 8.0f)));
 }
 
 void Robot::end() {
@@ -94,7 +132,7 @@ void Robot::end() {
 }
 
 void Robot::modCam(float &cX, float &cY, Level &lvl) {
-  cX += (info.x - cX - 320.0f) / 8.0f;
+  cX += (info.x - cX - float(320 + 80 * (info.xV / -8))) / 8.0f;
   cY += (info.gY - cY - 225.0f) / 8.0f;
   lvl.modCam(cX, cY, info.x, info.y);
 }

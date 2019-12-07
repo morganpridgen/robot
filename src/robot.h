@@ -16,10 +16,12 @@ class Robot {
   private:
     TXL_Texture robotTex;
     RobotInfo info;
-    bool dead;
+    bool dead, dir;
     void motionCalc(TXL_Controller*);
     void colCalc(TXL_Controller*, Level&);
     bool isInFloor(float, float, Level&);
+    float lLR, rLR, tLLR, tRLR, lAnim;
+    bool lLOff, rLOff;
   public:
     bool init();
     void update(TXL_Controller*, Level&);
