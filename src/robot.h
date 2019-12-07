@@ -9,15 +9,15 @@ class Robot;
 
 struct RobotInfo {
   float x, y, xV, yV;
-  bool grounded;
+  bool grounded, djCharge;
 };
 
 class Robot {
   private:
     TXL_Texture robotTex;
     RobotInfo info;
-    void motionCalc();
-    void colCalc(Level&);
+    void motionCalc(TXL_Controller*);
+    void colCalc(TXL_Controller*, Level&);
     bool isInFloor(float, float, Level&);
   public:
     bool init();

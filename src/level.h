@@ -5,9 +5,14 @@ class Level;
 
 #include "robot.h"
 
+struct TileSpan {
+  char type;
+  int len;
+};
+
 class Level {
   private:
-    int *terrain;
+    TileSpan *terrain;
     int length, depth;
   public:
     bool init(const char*, Robot&);

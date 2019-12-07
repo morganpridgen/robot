@@ -20,12 +20,12 @@ def genTerrain(surf, top):
     color, lastColor = tuple(), tuple()
     for j in range(surf.get_height()):
       color = surf.get_at((i, surf.get_height() - j - 1))
-      if j == 0 and color != (0, 0, 0): raise ValueError("Bottom of level cannot be left open.")
+      if j == 0 and colorToType(color) == 'E': raise ValueError("Bottom of level cannot be left open.")
       else:
         if lastColor != color:
           layer += 1
-          col.append(0)
-        col[layer] += 1
+          col.append([0, colorToType(color)])
+        col[layer][0] += 1
       lastColor = color
     print("Column %i is %s." % (i, col))
     out.append(col)
@@ -36,13 +36,18 @@ def genTerrain(surf, top):
     d -= 1
   
   for i in range(surf.get_width()):
-    while len(out[i]) < d: out[i].append(0)
+    while len(out[i]) < d: out[i].append((0, colorToType((255, 255, 255))))
     while len(out[i]) > d: out[i].pop(-1)
     for j in range(d):
-      if out[i][d - j - 1] != 0:
-        if j % 2 == 1: out[i][d - j - 1] = 0
+      if out[i][d - j - 1][0] != 0:
+        if j % 2 == 1: out[i][d - j - 1] = (0, colorToType((255, 255, 255)))
         break;
   return out
+
+def colorToType(color):
+  if color == (0, 0, 0): return 'S'
+  if color == (255, 0, 0): return 'L'
+  if color == (255, 255, 255): return 'E'
 
 
 
@@ -61,7 +66,7 @@ if __name__ == "__main__":
   with open("terrain.txt", "w") as f:
     f.write("%i\n%i\n" % (len(out), len(out[0])))
     for i in out:
-      for j in i: f.write("%i " % j)
+      for j in i: f.write("%s%i " % (j[1], j[0]))
       f.write("\n")
   
   pygame.quit()

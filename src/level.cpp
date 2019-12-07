@@ -35,8 +35,12 @@ bool Level::init(const char *name, Robot &robot) {
   if (!f.init(TXL_DataPath(path), 'r')) return 0;
   length = nextInt(&f);
   depth = nextInt(&f);
-  terrain = new int[length * depth];
-  for (int i = 0; i < length * depth; i++) terrain[i] = nextInt(&f);
+  terrain = new TileSpan[length * depth];
+  for (int i = 0; i < length * depth; i++) {
+    do f.read(&(terrain[i].type), sizeof(terrain[i].type));
+    while (terrain[i].type <= ' ');
+    terrain[i].len = nextInt(&f);
+  }
   f.close();
   sprintf(path, "%s/robot.txt", root);
   if (!f.init(TXL_DataPath(path), 'r')) return 0;
@@ -55,18 +59,25 @@ void Level::update() {
 
 void Level::render(float cX, float cY) {
   for (int i = cX / tileSize; i < (cX + 640.0f) / tileSize; i++) {
-    bool terrainRender = 1;
     int height = 0;
     for (int j = 0; j < depth; j++) {
-      terrainRender = !terrainRender;
-      if (terrainRender) {
-        height += terrain[i * depth + j];
+      if (terrain[i * depth + j].type == 'E') {
+        height += terrain[i * depth + j].len;
         continue;
       }
-      for (int k = 0; k < terrain[i * depth + j]; k++) {
-        TXL_RenderQuad(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY, tileSize, tileSize, {1.0f, 1.0f, 1.0f, 1.0f});
+      for (int k = 0; k < terrain[i * depth + j].len; k++) {
+        switch (terrain[i * depth + j].type) {
+          case 'S': {
+            TXL_RenderQuad(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY, tileSize, tileSize, {1.0f, 1.0f, 1.0f, 1.0f});
+            break;
+          }
+          case 'L': {
+            TXL_RenderQuad(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY, tileSize, tileSize, {1.0f, 1.0f, 0.0f, 1.0f});
+            break;
+          }
+        }
       }
-      height += terrain[i * depth + j];
+      height += terrain[i * depth + j].len;
     }
     if (depth % 2 == 0) {
       while ((height * tileSize) + cY < 360) { // height * tileSize - cY < 360
@@ -91,8 +102,8 @@ void Level::modCam(float &cX, float &cY, float pX, float pY) {
   
   int wPH = 0;
   for (int i = 0; i < depth; i++) {
-    if (wPH + terrain[wPX * depth + i] > wPY) break;
-    wPH += terrain[wPX * depth + i];
+    if (wPH + terrain[wPX * depth + i].len > wPY) break;
+    wPH += terrain[wPX * depth + i].len;
   }
   if (wPY - wPH < 8) {
     float camTarget = 90.0f - wPH * tileSize;
@@ -105,15 +116,13 @@ bool Level::inFloor(float x, float y) {
   int pX = x / tileSize;
   int pY = (360.0f - y) / tileSize + 1;
   int h = 0, lH = 0;
-  bool isSolid = 1;
   
   if (pX < 0 || pX >= length || pY < 0) return 1;
   
   for (int i = 0; i < depth; i++) {
-    h += terrain[pX * depth + i];
-    if (pY <= h && pY >= lH) return isSolid;
+    h += terrain[pX * depth + i].len;
+    if (pY <= h && pY >= lH) return terrain[pX * depth + i].type == 'S';
     lH = h;
-    isSolid = !isSolid;
   }
-  return isSolid;
+  return depth % 2 == 0;
 }
