@@ -5,7 +5,7 @@
 
 bool Robot::init() {
   //if (!robotTex.load(TXL_DataPath("robot.png"), 16, 16)) return 0;
-  info.x = 320.0f, info.y = 180.0f, info.xV = 0.0f, info.yV = 0.0f;
+  info.x = 320.0f, info.y = 180.0f, info.xV = 0.0f, info.yV = 0.0f, info.gY = 0.0f;
   info.grounded = 0;
   info.djCharge = 0;
   return 1;
@@ -35,14 +35,9 @@ void Robot::update(TXL_Controller *ctrl, Level &lvl) {
 
 void Robot::motionCalc(TXL_Controller *ctrl) {
   if (!info.grounded) {
-    info.yV += 1.0f + float(1 - (ctrl->buttonPress(CtrlS) || !info.djCharge));
-    if (info.xV * info.xV + info.yV * info.yV > 576.0f) {
-      float r = atan2(info.yV, info.xV);
-      info.xV = 24.0f * cos(r);
-      info.yV = 24.0f * sin(r);
-    }
+    if (info.yV < 16.0f) info.yV += 1.0f + float(1 - (ctrl->buttonPress(CtrlS) || !info.djCharge));
   }
-  if (fabs(info.xV) < 0.5f) info.xV = 0.0f;
+  if (fabs(info.xV) < 0.25f) info.xV = 0.0f;
 }
 
 void Robot::colCalc(TXL_Controller *ctrl, Level &lvl) {
@@ -52,29 +47,29 @@ void Robot::colCalc(TXL_Controller *ctrl, Level &lvl) {
       if (!isInFloor(0.0f, 0.0f - i, lvl)) { // floor check
         ctrl->rumble(fmin(fabs(info.yV) / 24.0f, 1.0f), 125);
         info.y -= i + 1;
+        info.gY = info.y;
         info.yV = 0.0f;
         info.grounded = 1;
         info.djCharge = 1;
         floor = 1;
         break;
       }
-      if (!isInFloor(0.0f - i, 0.0f, lvl)) { // left wall check
+      if (!isInFloor(0.0f - i, 0.0f, lvl)) { // right wall check
         ctrl->rumble(fmin(fabs(info.xV) / 6.0f, 1.0f), 125);
         info.x -= i + 1;
-        info.xV = 0;
+        info.xV = 0.0f;
         break;
       }
-      if (!isInFloor(0.0f + i, 0.0f, lvl)) { // right wall check
+      if (!isInFloor(0.0f + i, 0.0f, lvl)) { // left wall check
         ctrl->rumble(fmin(fabs(info.xV) / 6.0f, 1.0f), 125);
         info.x += i + 1;
-        info.xV = 0;
+        info.xV = 0.0f;
         break;
       }
       if (!isInFloor(0.0f, 0.0f + i, lvl)) { // ceiling check
         ctrl->rumble(fmin(fabs(info.yV) / 24.0f, 1.0f), 125);
         info.y += i + 1;
         info.yV = round(info.yV * -0.5f);
-        info.xV = 0;
         break;
       }
     }
@@ -96,5 +91,6 @@ void Robot::end() {
 
 void Robot::modCam(float &cX, float &cY, Level &lvl) {
   cX += (info.x - cX - 320.0f) / 8.0f;
+  cY += (info.gY - cY - 225.0f) / 8.0f;
   lvl.modCam(cX, cY, info.x, info.y);
 }

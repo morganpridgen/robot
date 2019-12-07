@@ -14,6 +14,8 @@ class Level {
   private:
     TileSpan *terrain;
     int length, depth;
+    bool solidTop;
+    bool inTile(float, float, char);
   public:
     bool init(const char*, Robot&);
     void update();
@@ -22,6 +24,7 @@ class Level {
     
     void modCam(float&, float&, float, float);
     bool inFloor(float, float);
+    bool inLethal(float, float);
 };
 
 #endif

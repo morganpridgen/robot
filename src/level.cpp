@@ -35,6 +35,7 @@ bool Level::init(const char *name, Robot &robot) {
   if (!f.init(TXL_DataPath(path), 'r')) return 0;
   length = nextInt(&f);
   depth = nextInt(&f);
+  solidTop = nextInt(&f);
   terrain = new TileSpan[length * depth];
   for (int i = 0; i < length * depth; i++) {
     do f.read(&(terrain[i].type), sizeof(terrain[i].type));
@@ -79,8 +80,8 @@ void Level::render(float cX, float cY) {
       }
       height += terrain[i * depth + j].len;
     }
-    if (depth % 2 == 0) {
-      while ((height * tileSize) + cY < 360) { // height * tileSize - cY < 360
+    if (solidTop) {
+      while ((height * tileSize) + cY < 360) {
         TXL_RenderQuad(i * tileSize + 16 - cX, 360.0f - ((height + 1) * tileSize) + 16 - cY, tileSize, tileSize, {1.0f, 1.0f, 1.0f, 1.0f});
         height++;
       }
@@ -95,34 +96,31 @@ void Level::end() {
 }
 
 void Level::modCam(float &cX, float &cY, float pX, float pY) {
-  int wPX = pX / tileSize;
-  int wPY = (360.0f - pY) / tileSize;
   if (cX < 0.0f) cX = 0.0f;
   if (cX > (length - 20) * tileSize) cX = (length - 20) * tileSize;
-  
-  int wPH = 0;
-  for (int i = 0; i < depth; i++) {
-    if (wPH + terrain[wPX * depth + i].len > wPY) break;
-    wPH += terrain[wPX * depth + i].len;
-  }
-  if (wPY - wPH < 8) {
-    float camTarget = 90.0f - wPH * tileSize;
-    cY += (camTarget - cY) / 8.0f;
-    if (cY > 0.0f) cY = 0.0f;
-  }
+  if (cY > 0.0f) cY = 0.0f;
 }
 
-bool Level::inFloor(float x, float y) {
+bool Level::inTile(float x, float y, char tile) {
   int pX = x / tileSize;
   int pY = (360.0f - y) / tileSize + 1;
   int h = 0, lH = 0;
   
-  if (pX < 0 || pX >= length || pY < 0) return 1;
+  if (pX < 0 || pX >= length) return tile == 'S';
+  if (pY < 0) return tile == 'L';
   
   for (int i = 0; i < depth; i++) {
     h += terrain[pX * depth + i].len;
-    if (pY <= h && pY >= lH) return terrain[pX * depth + i].type == 'S';
+    if (pY <= h && pY >= lH) return terrain[pX * depth + i].type == tile;
     lH = h;
   }
-  return depth % 2 == 0;
+  return solidTop ? (tile == 'S') : (tile == 'E');
+}
+
+bool Level::inFloor(float x, float y) {
+  return inTile(x, y, 'S');
+}
+
+bool Level::inLethal(float x, float y) {
+  return inTile(x, y, 'L');
 }

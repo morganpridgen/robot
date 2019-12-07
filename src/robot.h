@@ -8,7 +8,7 @@ class Robot;
 #include "level.h"
 
 struct RobotInfo {
-  float x, y, xV, yV;
+  float x, y, xV, yV, gY;
   bool grounded, djCharge;
 };
 
