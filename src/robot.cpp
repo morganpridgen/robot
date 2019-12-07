@@ -8,22 +8,25 @@ bool Robot::init() {
   info.x = 320.0f, info.y = 180.0f, info.xV = 0.0f, info.yV = 0.0f, info.gY = 0.0f;
   info.grounded = 0;
   info.djCharge = 0;
+  dead = 0;
   return 1;
 }
 
 void Robot::update(TXL_Controller *ctrl, Level &lvl) {
-  info.xV += ((ctrl->leftJoyX() * 4.0f * float(1 + ctrl->buttonPress(CtrlW))) - info.xV) / 8.0f;
-  if (ctrl->buttonClick(CtrlS)) {
-    if (info.grounded) {
-      info.yV = -16.0f;
-      info.grounded = 0;
-      ctrl->rumble(0.75f, 125);
-    } else if (info.djCharge) {
-      info.yV = -12.0f;
-      info.djCharge = 0;
-      ctrl->rumble(0.625f, 125);
+  if (!dead) {
+    info.xV += ((ctrl->leftJoyX() * 4.0f * float(1 + ctrl->buttonPress(CtrlW))) - info.xV) / 8.0f;
+    if (ctrl->buttonClick(CtrlS)) {
+      if (info.grounded) {
+        info.yV = -16.0f;
+        info.grounded = 0;
+        ctrl->rumble(0.75f, 125);
+      } else if (info.djCharge) {
+        info.yV = -12.0f;
+        info.djCharge = 0;
+        ctrl->rumble(0.625f, 125);
+      }
     }
-  }
+  } else info.xV += info.xV / -8.0f;
   
   motionCalc(ctrl);
   for (int i = 0; i < 4; i++) {
@@ -75,6 +78,7 @@ void Robot::colCalc(TXL_Controller *ctrl, Level &lvl) {
     }
   }
   if (!isInFloor(0.0f, 2.0f, lvl)) info.grounded = 0;
+  if (lvl.inLethal(info.x, info.y)) dead = 1;
 }
 
 bool Robot::isInFloor(float xOff, float yOff, Level &lvl) {

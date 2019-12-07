@@ -19,6 +19,9 @@ BaseState *PlayState::update(TXL_Controller *ctrls[4]) {
   robot.update(ctrls[0], lvl);
   lvl.update();
   if (endTimer >= 150) return new LevelSelectState;
+  if (respawnTimer) respawnTimer++;
+  if (robot.getDead() && !respawnTimer) respawnTimer = 1;
+  if (respawnTimer >= 120) return new PlayState;
   
   robot.modCam(cX, cY, lvl);
   return nullptr;

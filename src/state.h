@@ -17,7 +17,7 @@ class PlayState : public BaseState {
     Robot robot;
     Level lvl;
     float cX, cY;
-    int endTimer;
+    int endTimer, respawnTimer;
   public:
     virtual bool init();
     virtual BaseState *update(TXL_Controller*[4]);
