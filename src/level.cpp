@@ -43,12 +43,15 @@ bool Level::init(const char *name, Robot &robot) {
     terrain[i].len = nextInt(&f);
   }
   f.close();
-  sprintf(path, "%s/robot.txt", root);
+  sprintf(path, "%s/points.txt", root);
   if (!f.init(TXL_DataPath(path), 'r')) return 0;
   int rX, rY;
   rX = nextInt(&f);
   rY = nextInt(&f);
   robot.setPos(rX * tileSize + tileSize / 2.0f, 360.0f - (rY * tileSize));
+  gX = nextInt(&f);
+  gY = nextInt(&f);
+  f.close();
   
   if (!terrainTex.load(TXL_DataPath("terrain.png"), 64, 64)) return 0;
   animTimer = 0;
@@ -104,6 +107,11 @@ void Level::render(float cX, float cY) {
       }
     }
   }
+  terrainTex.setClip(32, 64, 0, 32);
+  terrainTex.render(gX * tileSize + 16 - cX, 360.0f - gY * tileSize - 16 - cY, animTimer);
+  terrainTex.render(gX * tileSize + 16 - cX, 360.0f - gY * tileSize - 16 - cY, -animTimer);
+  terrainTex.setClip(0, 32, 32, 64);
+  terrainTex.render(gX * tileSize + 16 - cX, 360.0f - gY * tileSize - 16 - cY);
 }
 
 void Level::end() {
@@ -140,5 +148,9 @@ bool Level::inFloor(float x, float y) {
 }
 
 bool Level::inLethal(float x, float y) {
+  if (int(x / tileSize) == gX && int((360.0f - y) / tileSize) == gY) {
+    finished = 1;
+    return 1;
+  }
   return inTile(x, y, 'L');
 }

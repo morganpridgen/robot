@@ -2,15 +2,22 @@
 
 import pygame, os, sys
 
-def genRobot(surf):
-  print("Searching for robot...")
+def genPoints(surf):
+  print("Searching for robot and goal...")
+  robot, goal = [-1, -1], [-1, -1]
   for i in range(surf.get_width()):
     for j in range(surf.get_height()):
-      if surf.get_at((i, j)) == (0x00, 0xff, 0x00):
+      if surf.get_at((i, j)) == (0, 255, 0):
         print("Found robot at (%i, %i)" % (i, surf.get_height() - j - 1))
         surf.set_at((i, j), (0xff, 0xff, 0xff))
-        return [i, surf.get_height() - j - 1]
-  raise ValueError("Can't find robot.")
+        robot = [i, surf.get_height() - j - 1]
+      if surf.get_at((i, j)) == (255, 255, 0):
+        print("Found goal at (%i, %i)" % (i, surf.get_height() - j - 1))
+        surf.set_at((i, j), (0xff, 0xff, 0xff))
+        goal = [i, surf.get_height() - j - 1]
+  if robot[0] < 0: raise ValueError("Can't find robot.")
+  if goal[0] < 0: raise ValueError("Can't find goal.")
+  return (robot, goal)
 
 def genTerrain(surf, top):
   d = 0
@@ -39,7 +46,9 @@ def genTerrain(surf, top):
     while len(out[i]) < d: out[i].append((0, colorToType((255, 255, 255))))
     while len(out[i]) > d: out[i].pop(-1)
     for j in range(d - 1, -1, -1):
-      if out[i][j][1] != colorToType((255, 255, 255)): break
+      if out[i][j][1] != colorToType((255, 255, 255)):
+        if top and out[i][j][1] == colorToType((0, 0, 0)): out[i][j] = (0, colorToType((255, 255, 255)))
+        break
       out[i][j] = (0, colorToType((255, 255, 255)))
   return out
 
@@ -57,9 +66,9 @@ if __name__ == "__main__":
   
   t = pygame.image.load("template.png")
   
-  out = genRobot(t)
-  with open("robot.txt", "w") as f:
-    f.write("%i %i" % tuple(out))
+  out = genPoints(t)
+  with open("points.txt", "w") as f:
+    f.write("%i %i\n%i %i" % (out[0][0], out[0][1], out[1][0], out[1][1]))
   
   cap = input("Should the top of the level be capped with solid tiles? (y/n) ").lower().startswith("y")
   out = genTerrain(t, cap)

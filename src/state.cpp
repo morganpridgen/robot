@@ -11,17 +11,16 @@ bool PlayState::init() {
   robot.getPos(cX, cY);
   cX -= 320.0f;
   cY -= 180.0f;
-  endTimer = 0;
+  respawnTimer = 0;
   return 1;
 }
 
 BaseState *PlayState::update(TXL_Controller *ctrls[4]) {
   robot.update(ctrls[0], lvl);
   lvl.update();
-  if (endTimer >= 150) return new LevelSelectState;
   if (respawnTimer) respawnTimer++;
   if (robot.getDead() && !respawnTimer) respawnTimer = 1;
-  if (respawnTimer >= 120) return new PlayState;
+  if (respawnTimer >= 120) return lvl.isFinished() ? (BaseState*)(new LevelSelectState) : (BaseState*)(new PlayState);
   
   robot.modCam(cX, cY, lvl);
   return nullptr;
@@ -30,8 +29,6 @@ BaseState *PlayState::update(TXL_Controller *ctrls[4]) {
 void PlayState::render() {
   lvl.render(cX, cY);
   robot.render(cX, cY);
-  
-  if (endTimer > 60) TXL_RenderQuad(320, 180, 640, 360, {1.0f, 1.0f, 1.0f, fmin(endTimer - 60, 60) / 60.0f});
 }
 
 void PlayState::end() {
