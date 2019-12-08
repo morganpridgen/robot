@@ -3,6 +3,7 @@
 #include <TEXEL/texel.h>
 #include "robot.h"
 #include "level.h"
+#include "ctrlmodule.h"
 
 class BaseState {
   public:
@@ -12,12 +13,32 @@ class BaseState {
     virtual void end() = 0;
 };
 
-class PlayState : public BaseState {
-  private:
+class GameState : public BaseState {
+  protected:
     Robot robot;
+    CtrlModule *ctrlModule;
     Level lvl;
     float cX, cY;
     int respawnTimer;
+    virtual bool engine();
+  public:
+    virtual bool init();
+    virtual BaseState *update(TXL_Controller*[4]) = 0;
+    virtual void render();
+    virtual void end();
+};
+
+class PlayState : public GameState {
+  protected:
+    TXL_File recording;
+  public:
+    virtual bool init();
+    virtual BaseState *update(TXL_Controller*[4]);
+    virtual void render();
+    virtual void end();
+};
+
+class ReplayState : public GameState {
   public:
     virtual bool init();
     virtual BaseState *update(TXL_Controller*[4]);

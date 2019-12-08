@@ -6,6 +6,7 @@
 class Robot;
 
 #include "level.h"
+#include "ctrlmodule.h"
 
 struct RobotInfo {
   float x, y, xV, yV, gY;
@@ -17,14 +18,15 @@ class Robot {
     TXL_Texture robotTex;
     RobotInfo info;
     bool dead, dir;
-    void motionCalc(TXL_Controller*);
-    void colCalc(TXL_Controller*, Level&);
+    void motionCalc(CtrlModule*);
+    void colCalc(CtrlModule*, Level&);
     bool isInFloor(float, float, Level&);
     float lLR, rLR, tLLR, tRLR, lAnim;
     bool lLOff, rLOff;
+    void lUpdate();
   public:
     bool init();
-    void update(TXL_Controller*, Level&);
+    void update(CtrlModule*, Level&);
     void render(float, float);
     void end();
     

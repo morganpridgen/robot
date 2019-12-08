@@ -55,6 +55,7 @@ bool Level::init(const char *name, Robot &robot) {
   
   if (!terrainTex.load(TXL_DataPath("terrain.png"), 64, 64)) return 0;
   animTimer = 0;
+  finished = 0;
   return 1;
 }
 
@@ -63,6 +64,19 @@ void Level::update() {
 }
 
 void Level::render(float cX, float cY) {
+  terrainTex.setColorMod(0.25f, 0.125f, 0.0f);
+  for (int i = cX / tileSize; i < (cX + 2560.0f) / tileSize + 1; i++) {
+    for (int j = cY / tileSize; j < (1440.0f - cY) / tileSize + 1; j++) {
+      if (i % 2 && j % 2) {
+        terrainTex.setClip(0, 32, 0, 32);
+        terrainTex.render(i * (tileSize / 4.0f) - cX / 4.0f, 360.0f - (j * tileSize / 4.0f) - cY / 4.0f, 0.5f, 0.5f);
+        terrainTex.setClip(32, 64, 0, 32);
+        if ((i / 2 + j / 2) % 2) terrainTex.render(i * (tileSize / 4.0f) - cX / 4.0f, 360.0f - (j * tileSize / 4.0f) - cY / 4.0f, 0.5f, 0.5f, animTimer / 2);
+      }
+    }
+  }
+  terrainTex.setColorMod(1.0f, 1.0f, 1.0f);
+  
   for (int i = cX / tileSize; i < (cX + 640.0f) / tileSize; i++) {
     int height = 0;
     for (int j = 0; j < depth; j++) {
@@ -107,11 +121,13 @@ void Level::render(float cX, float cY) {
       }
     }
   }
-  terrainTex.setClip(32, 64, 0, 32);
-  terrainTex.render(gX * tileSize + 16 - cX, 360.0f - gY * tileSize - 16 - cY, animTimer);
-  terrainTex.render(gX * tileSize + 16 - cX, 360.0f - gY * tileSize - 16 - cY, -animTimer);
-  terrainTex.setClip(0, 32, 32, 64);
-  terrainTex.render(gX * tileSize + 16 - cX, 360.0f - gY * tileSize - 16 - cY);
+  if (!finished) {
+    terrainTex.setClip(32, 64, 0, 32);
+    terrainTex.render(gX * tileSize + 16 - cX, 360.0f - gY * tileSize - 16 - cY, animTimer);
+    terrainTex.render(gX * tileSize + 16 - cX, 360.0f - gY * tileSize - 16 - cY, -animTimer);
+    terrainTex.setClip(0, 32, 32, 64);
+    terrainTex.render(gX * tileSize + 16 - cX, 360.0f - gY * tileSize - 16 - cY);
+  }
 }
 
 void Level::end() {

@@ -34,7 +34,7 @@ bool init() {
   TXL_InitPaths("robot");
   if (!TXL_LoadFont(TXL_DataPath("font.png"))) return 0;
   
-  if (!disp.init("Robogen")) return 0;
+  if (!disp.init("Robot")) return 0;
   for (int i = 0; i < 4; i++) {
     ctrls[i] = new TXL_Controller;
     if (!ctrls[i]->init()) {

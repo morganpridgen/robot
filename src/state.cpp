@@ -5,35 +5,92 @@
 
 char level[64];
 
-bool PlayState::init() {
+bool GameState::init() {
   if (!robot.init()) return 0;
   if (!lvl.init(level, robot)) return 0;
   robot.getPos(cX, cY);
   cX -= 320.0f;
   cY -= 180.0f;
   respawnTimer = 0;
+  ctrlModule = nullptr;
   return 1;
 }
 
-BaseState *PlayState::update(TXL_Controller *ctrls[4]) {
-  robot.update(ctrls[0], lvl);
+bool GameState::engine() {
+  robot.update(ctrlModule, lvl);
   lvl.update();
   if (respawnTimer) respawnTimer++;
   if (robot.getDead() && !respawnTimer) respawnTimer = 1;
-  if (respawnTimer >= 120) return lvl.isFinished() ? (BaseState*)(new LevelSelectState) : (BaseState*)(new PlayState);
+  if (respawnTimer >= 120) return 1;
   
   robot.modCam(cX, cY, lvl);
-  return nullptr;
+  return 0;
 }
 
-void PlayState::render() {
+void GameState::render() {
   lvl.render(cX, cY);
   robot.render(cX, cY);
 }
 
-void PlayState::end() {
+void GameState::end() {
+  delete ctrlModule;
   lvl.end();
   robot.end();
+}
+
+
+
+bool PlayState::init() {
+  if (!GameState::init()) return 0;
+  ctrlModule = new PlayerCtrlModule;
+  if (!recording.init(TXL_SavePath("tmp.bin"), 'w')) return 0;
+  return 1;
+}
+
+BaseState *PlayState::update(TXL_Controller *ctrls[4]) {
+  if (!lvl.isFinished()) {
+    ctrlModule->update(ctrls[0]);
+    float jX = ctrlModule->jX(), jY = ctrlModule->jY();
+    bool jump = ctrlModule->jump(), run = ctrlModule->run();
+    recording.write(&jX, sizeof(jX));
+    recording.write(&jY, sizeof(jY));
+    recording.write(&jump, sizeof(jump));
+    recording.write(&run, sizeof(run));
+  }
+  if (engine()) return lvl.isFinished() ? (BaseState*)(new ReplayState) : (BaseState*)(new PlayState);
+  return nullptr;
+}
+
+void PlayState::render() {
+  GameState::render();
+}
+
+void PlayState::end() {
+  recording.close();
+  GameState::end();
+}
+
+
+
+bool ReplayState::init() {
+  if (!GameState::init()) return 0;
+  ctrlModule = new RecordedCtrlModule;
+  if (!((RecordedCtrlModule*)ctrlModule)->init(TXL_SavePath("tmp.bin"))) return 0;
+  return 1;
+}
+
+BaseState *ReplayState::update(TXL_Controller *ctrls[4]) {
+  ctrlModule->update(nullptr);
+  if (engine()) return new LevelSelectState;
+  return nullptr;
+}
+
+void ReplayState::render() {
+  GameState::render();
+}
+
+void ReplayState::end() {
+  GameState::end();
 }
 
 
