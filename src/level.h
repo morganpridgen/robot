@@ -16,6 +16,8 @@ class Level {
     int length, depth;
     bool solidTop;
     bool inTile(float, float, char);
+    char typeAt(int, int);
+    int animTimer;
   public:
     bool init(const char*, Robot&);
     void update();

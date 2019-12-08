@@ -11,6 +11,7 @@ bool Robot::init() {
   info.grounded = 0;
   info.djCharge = 0;
   dead = 0, dir = 0;
+  lLR = 0.0f, rLR = 0.0f, tLLR = 0.0f, tRLR = 0.0f, lAnim = 0.0f;
   return 1;
 }
 
@@ -124,7 +125,7 @@ void Robot::render(float cX, float cY) {
   robotTex.setClip(24, 16, 0, 16);
   robotTex.render(info.x - cX + limbXOff, info.y - cY - 8 + limbYOff, rLR);
   robotTex.setClip(16 * dir, 16 * !dir, 0, 16);
-  robotTex.render(info.x - cX, info.y - cY - 8.0f + (sin(lAnim * 1.57f / 8.0f) + cos(lAnim * 1.57f / 8.0f)));
+  robotTex.render(info.x - cX, info.y - cY - 8.0f + (info.xV / 8.0f) * (sin(lAnim * 1.57f / 8.0f) + cos(lAnim * 1.57f / 8.0f)));
 }
 
 void Robot::end() {

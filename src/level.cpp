@@ -7,7 +7,7 @@
 
 #define tileSize 32.0f
 
-TXL_Texture groundTex;
+TXL_Texture terrainTex;
 
 int nextInt(TXL_File *f) {
   int out = 0;
@@ -50,12 +50,13 @@ bool Level::init(const char *name, Robot &robot) {
   rY = nextInt(&f);
   robot.setPos(rX * tileSize + tileSize / 2.0f, 360.0f - (rY * tileSize));
   
-  //if (!groundTex.load(TXL_DataPath("terrain.png"), 32, 32)) return 0;
+  if (!terrainTex.load(TXL_DataPath("terrain.png"), 64, 64)) return 0;
+  animTimer = 0;
   return 1;
 }
 
 void Level::update() {
-  
+  animTimer++;
 }
 
 void Level::render(float cX, float cY) {
@@ -69,11 +70,24 @@ void Level::render(float cX, float cY) {
       for (int k = 0; k < terrain[i * depth + j].len; k++) {
         switch (terrain[i * depth + j].type) {
           case 'S': {
-            TXL_RenderQuad(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY, tileSize, tileSize, {1.0f, 1.0f, 1.0f, 1.0f});
+            terrainTex.setClip(0, 32, 0, 32);
+            terrainTex.render(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY);
+            terrainTex.setClip(32, 64, 0, 32);
+            terrainTex.render(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY, animTimer * (((i + k + height) % 2) ? -1 : 1));
             break;
           }
           case 'L': {
-            TXL_RenderQuad(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY, tileSize, tileSize, {1.0f, 1.0f, 0.0f, 1.0f});
+            terrainTex.setClip(0, 32, 32, 64);
+            terrainTex.render(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY);
+            terrainTex.setClip(32, 64, 32, 64);
+            char belowType = typeAt(i, k + height);
+            if (belowType == 'S' || belowType == 'L') terrainTex.render(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY, 0);
+            char leftType = typeAt(i - 1, k + height + 1);
+            if (leftType == 'S' || leftType == 'L') terrainTex.render(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY, 90);
+            char aboveType = typeAt(i, k + height + 2);
+            if (aboveType == 'S' || aboveType == 'L') terrainTex.render(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY, 180);
+            char rightType = typeAt(i + 1, k + height + 1);
+            if (rightType == 'S' || rightType == 'L') terrainTex.render(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY, 270);
             break;
           }
         }
@@ -82,7 +96,10 @@ void Level::render(float cX, float cY) {
     }
     if (solidTop) {
       while ((height * tileSize) + cY < 360) {
-        TXL_RenderQuad(i * tileSize + 16 - cX, 360.0f - ((height + 1) * tileSize) + 16 - cY, tileSize, tileSize, {1.0f, 1.0f, 1.0f, 1.0f});
+        terrainTex.setClip(0, 32, 0, 32);
+        terrainTex.render(i * tileSize + 16 - cX, 360.0f - ((height + 1) * tileSize) + 16 - cY);
+        terrainTex.setClip(32, 64, 0, 32);
+        terrainTex.render(i * tileSize + 16 - cX, 360.0f - ((height + 1) * tileSize) + 16 - cY, animTimer * (((i + height) % 2) ? -1 : 1));
         height++;
       }
     }
@@ -90,7 +107,7 @@ void Level::render(float cX, float cY) {
 }
 
 void Level::end() {
-  groundTex.free();
+  terrainTex.free();
   delete [] terrain;
   terrain = nullptr;
 }
@@ -102,19 +119,20 @@ void Level::modCam(float &cX, float &cY, float pX, float pY) {
 }
 
 bool Level::inTile(float x, float y, char tile) {
-  int pX = x / tileSize;
-  int pY = (360.0f - y) / tileSize + 1;
+  return typeAt(x / tileSize, (360.0f - y) / tileSize + 1) == tile;
+}
+
+char Level::typeAt(int x, int y) {
+  if (x < 0 || x >= length) return 'S';
+  if (y < 0) return 'L';
+  
   int h = 0, lH = 0;
-  
-  if (pX < 0 || pX >= length) return tile == 'S';
-  if (pY < 0) return tile == 'L';
-  
   for (int i = 0; i < depth; i++) {
-    h += terrain[pX * depth + i].len;
-    if (pY <= h && pY >= lH) return terrain[pX * depth + i].type == tile;
+    h += terrain[x * depth + i].len;
+    if (y <= h && y >= lH) return terrain[x * depth + i].type;
     lH = h;
   }
-  return solidTop ? (tile == 'S') : (tile == 'E');
+  return solidTop ? 'S' : 'E';
 }
 
 bool Level::inFloor(float x, float y) {
