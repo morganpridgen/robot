@@ -36,12 +36,18 @@ class PlayerCtrlModule : public CtrlModule {
 
 class RecordedCtrlModule : public CtrlModule {
   protected:
+    struct Input {
+      float jX, jY;
+      bool bJ, bR;
+    };
+    Input *inputs;
+    int playLen, timer;
     float joyX, joyY;
     bool bJ, lBJ, bR, lBR;
-    TXL_File in;
   public:
     bool init(char*);
     ~RecordedCtrlModule();
+    int timeLeft() {return playLen - timer;}
     
     virtual float jX();
     virtual float jY();

@@ -19,7 +19,7 @@ class GameState : public BaseState {
     CtrlModule *ctrlModule;
     Level lvl;
     float cX, cY;
-    int respawnTimer;
+    int respawnTimer, gameTimer;
     virtual bool engine();
   public:
     virtual bool init();
@@ -31,6 +31,7 @@ class GameState : public BaseState {
 class PlayState : public GameState {
   protected:
     TXL_File recording;
+    bool lastFinish, highScore;
   public:
     virtual bool init();
     virtual BaseState *update(TXL_Controller*[4]);
@@ -49,8 +50,9 @@ class ReplayState : public GameState {
 class LevelSelectState : public BaseState {
   private:
     char **levelList;
-    int selectedLevel, lvlCount;
+    int selectedLevel, lSL, lvlCount;
     float lJX;
+    int stageTime;
   public:
     virtual bool init();
     virtual BaseState *update(TXL_Controller*[4]);
