@@ -13,6 +13,7 @@ class CtrlModule {
     virtual bool lRun() = 0;
     virtual void rumble(float, int) = 0;
     virtual void update(void*) = 0;
+    virtual bool isReplay() = 0;
 };
 
 class PlayerCtrlModule : public CtrlModule {
@@ -32,6 +33,7 @@ class PlayerCtrlModule : public CtrlModule {
     virtual bool lRun();
     virtual void rumble(float, int);
     virtual void update(void*);
+    virtual bool isReplay() {return 0;}
 };
 
 class RecordedCtrlModule : public CtrlModule {
@@ -57,6 +59,7 @@ class RecordedCtrlModule : public CtrlModule {
     virtual bool lRun();
     virtual void rumble(float, int);
     virtual void update(void*);
+    virtual bool isReplay() {return 1;}
 };
 
 #endif

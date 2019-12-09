@@ -12,10 +12,12 @@ bool Robot::init() {
   info.djCharge = 0;
   dead = 0, dir = 0;
   lLR = 0.0f, rLR = 0.0f, tLLR = 0.0f, tRLR = 0.0f, lAnim = 0.0f;
+  isReplay = 0;
   return 1;
 }
 
 void Robot::update(CtrlModule *ctrl, Level &lvl) {
+  isReplay = ctrl->isReplay();
   if (!dead) {
     info.xV += ((ctrl->jX() * 4.0f * float(1 + ctrl->run())) - info.xV) / 8.0f;
     if (ctrl->jump() && !ctrl->lJump()) {
@@ -99,6 +101,7 @@ bool Robot::isInFloor(float xOff, float yOff, Level &lvl) {
 }
 
 void Robot::render(float cX, float cY) {
+  robotTex.setColorMod(float(2 - isReplay) / 2.0f);
   robotTex.setClip(16, 24, 0, 16);
   robotTex.render(info.x - cX - limbXOff, info.y - cY - 8 + limbYOff, lLR);
   robotTex.setClip(24, 16, 0, 16);

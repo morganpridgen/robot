@@ -24,6 +24,7 @@ class Robot {
     float lLR, rLR, tLLR, tRLR, lAnim;
     bool lLOff, rLOff;
     void lUpdate();
+    bool isReplay;
   public:
     bool init();
     void update(CtrlModule*, Level&);
