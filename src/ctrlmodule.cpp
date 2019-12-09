@@ -53,13 +53,13 @@ void PlayerCtrlModule::rumble(float nRPow, int nRTime) {
 bool RecordedCtrlModule::init(char *level) {
   TXL_File f;
   char path[64];
-  sprintf(path, "%s-time.bin", level);
+  sprintf(path, "%s-time", level);
   if (!f.init(TXL_SavePath(path), 'r')) return 0;
   f.read(&playLen, sizeof(playLen));
   f.close();
   if (playLen == INT_MAX) return 0;
   inputs = new Input[playLen];
-  sprintf(path, "%s-play.bin", level);
+  sprintf(path, "%s-play", level);
   if (!f.init(TXL_SavePath(path), 'r')) return 0;
   for (int i = 0; i < playLen; i++) {
     f.read(&inputs[i].jX, sizeof(inputs[i].jX));

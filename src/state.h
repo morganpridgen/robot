@@ -20,6 +20,7 @@ class GameState : public BaseState {
     Level lvl;
     float cX, cY;
     int respawnTimer, gameTimer;
+    bool timerStart;
     virtual bool engine();
   public:
     virtual bool init();

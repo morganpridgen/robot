@@ -13,12 +13,13 @@ bool GameState::init() {
   robot.getPos(cX, cY);
   cX -= 320.0f;
   cY -= 180.0f;
-  respawnTimer = 0, gameTimer = 0;
+  respawnTimer = 0, gameTimer = 0, timerStart = 0;
   ctrlModule = nullptr;
   return 1;
 }
 
 bool GameState::engine() {
+  if (fabs(ctrlModule->jX()) > 0.125f || fabs(ctrlModule->jY()) > 0.125f || ctrlModule->jump()) timerStart = 1;
   robot.update(ctrlModule, lvl);
   lvl.update();
   if (respawnTimer) respawnTimer++;
@@ -26,7 +27,7 @@ bool GameState::engine() {
   if (respawnTimer >= 120) return 1;
   
   robot.modCam(cX, cY, lvl);
-  gameTimer += !lvl.isFinished();
+  gameTimer += !lvl.isFinished() && timerStart;
   return 0;
 }
 
@@ -55,7 +56,7 @@ void GameState::end() {
 bool PlayState::init() {
   if (!GameState::init()) return 0;
   ctrlModule = new PlayerCtrlModule;
-  if (!recording.init(TXL_SavePath("tmp.bin"), 'w')) return 0;
+  if (!recording.init(TXL_SavePath(".tmp"), 'w')) return 0;
   lastFinish = 0, highScore = 0;
   return 1;
 }
@@ -65,14 +66,16 @@ BaseState *PlayState::update(TXL_Controller *ctrls[4]) {
     ctrlModule->update(ctrls[0]);
     float jX = ctrlModule->jX(), jY = ctrlModule->jY();
     bool jump = ctrlModule->jump(), run = ctrlModule->run();
-    recording.write(&jX, sizeof(jX));
-    recording.write(&jY, sizeof(jY));
-    recording.write(&jump, sizeof(jump));
-    recording.write(&run, sizeof(run));
+    if (timerStart) {
+      recording.write(&jX, sizeof(jX));
+      recording.write(&jY, sizeof(jY));
+      recording.write(&jump, sizeof(jump));
+      recording.write(&run, sizeof(run));
+    }
   } else if (!lastFinish) {
     TXL_File f;
     char path[64];
-    sprintf(path, "%s-time.bin", level);
+    sprintf(path, "%s-time", level);
     if (!f.init(TXL_SavePath(path), 'r')) highScore = 1;
     else {
       int highTime;
@@ -105,13 +108,13 @@ void PlayState::end() {
   if (highScore) {
     char path[64];
     TXL_File f;
-    sprintf(path, "%s-time.bin", level);
+    sprintf(path, "%s-time", level);
     if (f.init(TXL_SavePath(path), 'w')) {
       f.write(&gameTimer, sizeof(gameTimer));
       f.close();
     }
-    if (recording.init(TXL_SavePath("tmp.bin"), 'r')) {
-      sprintf(path, "%s-play.bin", level);
+    if (recording.init(TXL_SavePath(".tmp"), 'r')) {
+      sprintf(path, "%s-play", level);
       if (f.init(TXL_SavePath(path), 'w')) {
         char tmp;
         while (recording.read(&tmp, sizeof(tmp))) f.write(&tmp, sizeof(tmp));
@@ -138,7 +141,7 @@ BaseState *ReplayState::update(TXL_Controller *ctrls[4]) {
   if (((RecordedCtrlModule*)ctrlModule)->timeLeft() < -300) {
     TXL_File f;
     char path[64];
-    sprintf(path, "%s-time.bin", level);
+    sprintf(path, "%s-time", level);
     if (f.init(TXL_SavePath(path), 'w')) {
       int tmp = INT_MAX;
       f.write(&tmp, sizeof(tmp));
@@ -189,7 +192,7 @@ bool LevelSelectState::init() {
   }
   
   char path[64];
-  sprintf(path, "%s-time.bin", levelList[0]);
+  sprintf(path, "%s-time", levelList[0]);
   if (f.init(TXL_SavePath(path), 'r')) {
     f.read(&stageTime, sizeof(stageTime));
     f.close();
@@ -208,7 +211,7 @@ BaseState *LevelSelectState::update(TXL_Controller *ctrls[4]) {
   if (lSL != selectedLevel) {
     TXL_File f;
     char path[64];
-    sprintf(path, "%s-time.bin", levelList[0]);
+    sprintf(path, "%s-time", levelList[selectedLevel]);
     if (f.init(TXL_SavePath(path), 'r')) {
       f.read(&stageTime, sizeof(stageTime));
       f.close();
