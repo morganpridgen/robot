@@ -17,7 +17,7 @@ class Robot {
   private:
     TXL_Texture robotTex;
     RobotInfo info;
-    bool dead, dir;
+    bool dead, finished, dir;
     void motionCalc(CtrlModule*);
     void colCalc(CtrlModule*, Level&);
     bool isInFloor(float, float, Level&);
@@ -25,6 +25,7 @@ class Robot {
     bool lLOff, rLOff;
     void lUpdate();
     bool isReplay;
+    int deathTimer;
   public:
     bool init();
     void update(CtrlModule*, Level&);
@@ -35,6 +36,7 @@ class Robot {
     void setPos(float x, float y) {info.x = x, info.y = y;}
     void modCam(float&, float&, Level&);
     bool getDead() {return dead;}
+    bool getFinished() {return finished;}
 };
 
 #endif

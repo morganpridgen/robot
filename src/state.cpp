@@ -3,6 +3,7 @@
 #include <cmath>
 #include <climits>
 #include <TEXEL/texel.h>
+#include "particle.h"
 
 char level[64];
 bool highScoreReplay = 0;
@@ -10,6 +11,7 @@ bool highScoreReplay = 0;
 bool GameState::init() {
   if (!robot.init()) return 0;
   if (!lvl.init(level, robot)) return 0;
+  if (!initParticles()) return 0;
   robot.getPos(cX, cY);
   cX -= 320.0f;
   cY -= 180.0f;
@@ -23,18 +25,24 @@ bool GameState::engine() {
   robot.update(ctrlModule, lvl);
   lvl.update();
   if (respawnTimer) respawnTimer++;
-  if (robot.getDead() && !respawnTimer) respawnTimer = 1;
+  if ((robot.getDead() || robot.getFinished()) && !respawnTimer) respawnTimer = 1;
   if (respawnTimer >= 120) return 1;
   
   robot.modCam(cX, cY, lvl);
-  gameTimer += !lvl.isFinished() && timerStart;
+  gameTimer += !robot.getFinished() && timerStart;
+  updateParticles();
   return 0;
 }
 
 void GameState::render() {
   lvl.render(cX, cY);
   robot.render(cX, cY);
+  renderParticles(cX, cY);
   
+  renderHud();
+}
+
+void GameState::renderHud() {
   char timer[9];
   sprintf(timer, "%02i:%05.2f", gameTimer / 3600, fmod(gameTimer, 3600) / 60.0f);
   TXL_Texture *timerTex = TXL_RenderText(timer, 1.0f, 1.0f, 1.0f);
@@ -46,6 +54,7 @@ void GameState::render() {
 }
 
 void GameState::end() {
+  endParticles();
   delete ctrlModule;
   lvl.end();
   robot.end();
@@ -57,22 +66,27 @@ bool PlayState::init() {
   if (!GameState::init()) return 0;
   ctrlModule = new PlayerCtrlModule;
   if (!recording.init(TXL_SavePath(".tmp"), 'w')) return 0;
-  lastFinish = 0, highScore = 0;
+  lastFinish = 0, highScore = 0, firstLoop = 1;
+  enemyModule = new RecordedCtrlModule;
+  if (((RecordedCtrlModule*)enemyModule)->init(level)) {
+    if (!enemyRobot.init()) return 0;
+  } else {
+    delete enemyModule;
+    enemyModule = nullptr;
+  }
   return 1;
 }
 
 BaseState *PlayState::update(TXL_Controller *ctrls[4]) {
-  if (!lvl.isFinished()) {
+  if (timerStart && enemyModule) {
+    enemyModule->update(nullptr);
+    enemyRobot.update(enemyModule, lvl);
+  }
+  if (!robot.getFinished()) {
+    if (timerStart) ((PlayerCtrlModule*)ctrlModule)->write(recording);
     ctrlModule->update(ctrls[0]);
-    float jX = ctrlModule->jX(), jY = ctrlModule->jY();
-    bool jump = ctrlModule->jump(), run = ctrlModule->run();
-    if (timerStart) {
-      recording.write(&jX, sizeof(jX));
-      recording.write(&jY, sizeof(jY));
-      recording.write(&jump, sizeof(jump));
-      recording.write(&run, sizeof(run));
-    }
   } else if (!lastFinish) {
+    ((PlayerCtrlModule*)ctrlModule)->write(recording);
     TXL_File f;
     char path[64];
     sprintf(path, "%s-time", level);
@@ -84,16 +98,27 @@ BaseState *PlayState::update(TXL_Controller *ctrls[4]) {
       f.close();
     }
     highScoreReplay = highScore;
+    lastFinish = 1;
   }
   if (engine()) {
-    if (lvl.isFinished()) return highScore ? (BaseState*)(new ReplayState) : (BaseState*)(new LevelSelectState);
+    if (robot.getFinished()) return highScore ? (BaseState*)(new ReplayState) : (BaseState*)(new LevelSelectState);
     return new PlayState;
   }
+  if (firstLoop) {
+    float pX, pY;
+    robot.getPos(pX, pY);
+    enemyRobot.setPos(pX, pY);
+  }
+  firstLoop = 0;
   return nullptr;
 }
 
 void PlayState::render() {
-  GameState::render();
+  lvl.render(cX, cY);
+  if (enemyModule) enemyRobot.render(cX, cY);
+  robot.render(cX, cY);
+  renderParticles(cX, cY);
+  renderHud();
   if (highScore) {
     TXL_Texture *winTex = TXL_RenderText("New Record!", 1.0f, 1.0f, 1.0f);
     winTex->setColorMod(0.625f, 0.625f, 0.625f);
@@ -123,6 +148,11 @@ void PlayState::end() {
       recording.close();
     }
   }
+  if (enemyModule) {
+    delete enemyModule;
+    enemyModule = nullptr;
+    enemyRobot.end();
+  }
   GameState::end();
 }
 
@@ -132,12 +162,16 @@ bool ReplayState::init() {
   if (!GameState::init()) return 0;
   ctrlModule = new RecordedCtrlModule;
   if (!((RecordedCtrlModule*)ctrlModule)->init(level)) return 0;
+  skipLoop = 5;
   return 1;
 }
 
 BaseState *ReplayState::update(TXL_Controller *ctrls[4]) {
-  ctrlModule->update(nullptr);
-  if (engine()) return new LevelSelectState;
+  if (skipLoop) skipLoop--;
+  else ctrlModule->update(nullptr);
+  if (engine()) {
+    if (robot.getFinished()) return new LevelSelectState;
+  }
   if (((RecordedCtrlModule*)ctrlModule)->timeLeft() < -300) {
     TXL_File f;
     char path[64];
@@ -249,6 +283,6 @@ void LevelSelectState::render() {
 
 void LevelSelectState::end() {
   for (int i = 0; i < lvlCount; i++) delete levelList[i];
-  delete levelList;
+  delete [] levelList;
   levelList = nullptr;
 }

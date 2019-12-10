@@ -18,8 +18,8 @@ class Level {
     bool inTile(float, float, char);
     char typeAt(int, int);
     int animTimer;
-    bool finished;
     int gX, gY;
+    float lCX, lCY;
   public:
     bool init(const char*, Robot&);
     void update();
@@ -29,7 +29,7 @@ class Level {
     void modCam(float&, float&, float, float);
     bool inFloor(float, float);
     bool inLethal(float, float);
-    bool isFinished() {return finished;}
+    bool inGoal(float, float);
 };
 
 #endif

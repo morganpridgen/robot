@@ -24,6 +24,7 @@ class PlayerCtrlModule : public CtrlModule {
     int rTime;
   public:
     PlayerCtrlModule();
+    void write(TXL_File&);
     
     virtual float jX();
     virtual float jY();

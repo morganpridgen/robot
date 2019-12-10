@@ -7,6 +7,13 @@ PlayerCtrlModule::PlayerCtrlModule() {
   rPow = 0.0f, rTime = 0;
 }
 
+void PlayerCtrlModule::write(TXL_File &f) {
+  f.write(&joyX, sizeof(joyX));
+  f.write(&joyY, sizeof(joyY));
+  f.write(&bJ, sizeof(bJ));
+  f.write(&bR, sizeof(bR));
+}
+
 void PlayerCtrlModule::update(void *data) {
   TXL_Controller *ctrl = (TXL_Controller*)data;
   joyX = ctrl->leftJoyX(), joyY = ctrl->leftJoyY();

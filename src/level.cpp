@@ -4,6 +4,7 @@
 #include <cmath>
 #include <TEXEL/texel.h>
 #include "robot.h"
+#include "particle.h"
 
 #define tileSize 32.0f
 
@@ -55,11 +56,33 @@ bool Level::init(const char *name, Robot &robot) {
   
   if (!terrainTex.load(TXL_DataPath("terrain.png"), 64, 64)) return 0;
   animTimer = 0;
-  finished = 0;
+  lCX = 0.0f, lCY = 0.0f;
   return 1;
 }
 
 void Level::update() {
+  for (int i = lCX / tileSize; i < (lCX + 640.0f) / tileSize; i++) {
+    int height = 0;
+    for (int j = 0; j < depth; j++) {
+      for (int k = 0; k < terrain[i * depth + j].len; k++) {
+        switch (terrain[i * depth + j].type) {
+          case 'L': {
+            if (animTimer % 32 == 0) {
+              for (int l = 0; l < 8; l++) {
+                addParticle({i * tileSize + 16, 360.0f - ((k + height + 1) * tileSize) + 16, 2.0f * cos(l * 3.14f / 4.0f), 2.0f * sin(l * 3.14f / 4.0f), 15, 1.0f, 1.0f, 0.5f, 0.75f, 2.0f});
+              }
+            }
+          }
+        }
+      }
+      height += terrain[i * depth + j].len;
+    }
+  }
+  if (fabs(gX * tileSize + 16 - lCX - 320.0f) < 320.0f && fabs(360.0f - gY * tileSize - 16 - lCY - 180.0f)) {
+    for (int i = 0; i < 8; i++) {
+      addParticle({gX * tileSize + 16, 360.0f - gY * tileSize - 16, 2.0f * cos(3.14f * (i / 4.0f + animTimer / 64.0f)), 2.0f * sin(3.14f * (i / 4.0f + animTimer / 64.0f)), 15, 1.0f, 1.0f, 1.0f, 0.25f, 2.0f});
+    }
+  }
   animTimer++;
 }
 
@@ -121,13 +144,11 @@ void Level::render(float cX, float cY) {
       }
     }
   }
-  if (!finished) {
-    terrainTex.setClip(32, 64, 0, 32);
-    terrainTex.render(gX * tileSize + 16 - cX, 360.0f - gY * tileSize - 16 - cY, animTimer);
-    terrainTex.render(gX * tileSize + 16 - cX, 360.0f - gY * tileSize - 16 - cY, -animTimer);
-    terrainTex.setClip(0, 32, 32, 64);
-    terrainTex.render(gX * tileSize + 16 - cX, 360.0f - gY * tileSize - 16 - cY);
-  }
+  terrainTex.setClip(32, 64, 0, 32);
+  terrainTex.render(gX * tileSize + 16 - cX, 360.0f - gY * tileSize - 16 - cY, animTimer);
+  terrainTex.render(gX * tileSize + 16 - cX, 360.0f - gY * tileSize - 16 - cY, -animTimer);
+  terrainTex.setClip(0, 32, 32, 64);
+  terrainTex.render(gX * tileSize + 16 - cX, 360.0f - gY * tileSize - 16 - cY);
 }
 
 void Level::end() {
@@ -140,6 +161,7 @@ void Level::modCam(float &cX, float &cY, float pX, float pY) {
   if (cX < 0.0f) cX = 0.0f;
   if (cX > (length - 20) * tileSize) cX = (length - 20) * tileSize;
   if (cY > 0.0f) cY = 0.0f;
+  lCX = cX, lCY = cY;
 }
 
 bool Level::inTile(float x, float y, char tile) {
@@ -164,9 +186,9 @@ bool Level::inFloor(float x, float y) {
 }
 
 bool Level::inLethal(float x, float y) {
-  if (int(x / tileSize) == gX && int((360.0f - y) / tileSize) == gY) {
-    finished = 1;
-    return 1;
-  }
   return inTile(x, y, 'L');
+}
+
+bool Level::inGoal(float x, float y) {
+  return int(x / tileSize) == gX && int((360.0f - y) / tileSize) == gY;
 }

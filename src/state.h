@@ -22,6 +22,7 @@ class GameState : public BaseState {
     int respawnTimer, gameTimer;
     bool timerStart;
     virtual bool engine();
+    virtual void renderHud();
   public:
     virtual bool init();
     virtual BaseState *update(TXL_Controller*[4]) = 0;
@@ -32,7 +33,9 @@ class GameState : public BaseState {
 class PlayState : public GameState {
   protected:
     TXL_File recording;
-    bool lastFinish, highScore;
+    bool lastFinish, highScore, firstLoop;
+    Robot enemyRobot;
+    CtrlModule *enemyModule;
   public:
     virtual bool init();
     virtual BaseState *update(TXL_Controller*[4]);
@@ -41,6 +44,8 @@ class PlayState : public GameState {
 };
 
 class ReplayState : public GameState {
+  protected:
+    int skipLoop;
   public:
     virtual bool init();
     virtual BaseState *update(TXL_Controller*[4]);
