@@ -26,40 +26,41 @@ bool Robot::init() {
 
 void Robot::update(CtrlModule *ctrl, Level &lvl) {
   isReplay = ctrl->isReplay();
-  if (!(dead || finished)) {
-    info.xV += ((ctrl->jX() * 4.0f * float(1 + ctrl->run())) - info.xV) / 8.0f;
-    if (ctrl->jump() && !ctrl->lJump()) {
-      if (info.grounded) {
-        info.yV = -16.0f;
-        info.grounded = 0;
-        ctrl->rumble(0.75f, 125);
-        if (!isReplay) TXL_PlaySound(jumpSnd);
-      } else if (info.djCharge) {
-        info.yV = -12.0f;
-        info.djCharge = 0;
-        ctrl->rumble(0.625f, 125);
-        if (!isReplay) {
-          TXL_PlaySound(djSnd);
-          for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 5; j++) {
-              addParticle({info.x, info.y, (1 + i) * cos((j + 2) * 3.14f / 8.0f), (2 + i) * sin((j + 2) * 3.14f / 8.0f), 30, 1.0f, float(i) / 2.0f, 0.0f, 0.5f, 2.0f});
+  if (!dead) {
+    if (!finished) {
+      info.xV += ((ctrl->jX() * 4.0f * float(1 + ctrl->run())) - info.xV) / 8.0f;
+      if (ctrl->jump() && !ctrl->lJump()) {
+        if (info.grounded) {
+          info.yV = -16.0f;
+          info.grounded = 0;
+          ctrl->rumble(0.75f, 125);
+          if (!isReplay) TXL_PlaySound(jumpSnd);
+        } else if (info.djCharge) {
+          info.yV = -12.0f;
+          info.djCharge = 0;
+          ctrl->rumble(0.625f, 125);
+          if (!isReplay) {
+            TXL_PlaySound(djSnd);
+            for (int i = 0; i < 3; i++) {
+              for (int j = 0; j < 5; j++) {
+                addParticle({info.x, info.y, (1 + i) * cos((j + 2) * 3.14f / 8.0f), (2 + i) * sin((j + 2) * 3.14f / 8.0f), 30, 1.0f, float(i) / 2.0f, 0.0f, 0.5f, 2.0f});
+              }
             }
           }
         }
       }
-    }
-  } else info.xV += info.xV / -8.0f;
-  if (info.xV > 0) dir = 0;
-  if (info.xV < 0) dir = 1;
+    } else info.xV += info.xV / -8.0f;
+    if (info.xV > 0) dir = 0;
+    if (info.xV < 0) dir = 1;
   
-  motionCalc(ctrl);
-  for (int i = 0; i < 4; i++) {
-    info.x += info.xV / 4.0f;
-    info.y += info.yV / 4.0f;
-    colCalc(ctrl, lvl);
-  }
-  lUpdate();
-  if (dead && !isReplay) {
+    motionCalc(ctrl);
+    for (int i = 0; i < 4; i++) {
+      info.x += info.xV / 4.0f;
+      info.y += info.yV / 4.0f;
+      colCalc(ctrl, lvl);
+    }
+    lUpdate();
+  } else if (!isReplay && deathTimer < 15) {
     if (deathTimer % 2) TXL_PlaySound(explodeSnd);
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 32; j++) {
@@ -132,6 +133,7 @@ bool Robot::isInFloor(float xOff, float yOff, Level &lvl) {
 }
 
 void Robot::render(float cX, float cY) {
+  if (deathTimer >= 15) return;
   robotTex.setColorMod(float(2 - isReplay) / 2.0f);
   robotTex.setClip(16, 24, 0, 16);
   robotTex.render(info.x - cX - limbXOff, info.y - cY - 8 + limbYOff, lLR);

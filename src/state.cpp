@@ -89,7 +89,7 @@ BaseState *PlayState::update(TXL_Controller *ctrls[4]) {
     ((PlayerCtrlModule*)ctrlModule)->write(recording);
     TXL_File f;
     char path[64];
-    sprintf(path, "%s-time", level);
+    sprintf(path, "%s/time", level);
     if (!f.init(TXL_SavePath(path), 'r')) highScore = 1;
     else {
       int highTime;
@@ -133,13 +133,14 @@ void PlayState::end() {
   if (highScore) {
     char path[64];
     TXL_File f;
-    sprintf(path, "%s-time", level);
+    if (!TXL_IsDir(TXL_SavePath(level))) TXL_CreateDir(TXL_SavePath(level));
+    sprintf(path, "%s/time", level);
     if (f.init(TXL_SavePath(path), 'w')) {
       f.write(&gameTimer, sizeof(gameTimer));
       f.close();
     }
     if (recording.init(TXL_SavePath(".tmp"), 'r')) {
-      sprintf(path, "%s-play", level);
+      sprintf(path, "%s/play", level);
       if (f.init(TXL_SavePath(path), 'w')) {
         char tmp;
         while (recording.read(&tmp, sizeof(tmp))) f.write(&tmp, sizeof(tmp));
@@ -173,14 +174,20 @@ BaseState *ReplayState::update(TXL_Controller *ctrls[4]) {
     if (robot.getFinished()) return new LevelSelectState;
   }
   if (((RecordedCtrlModule*)ctrlModule)->timeLeft() < -300) {
-    TXL_File f;
+    /*TXL_File f;
     char path[64];
-    sprintf(path, "%s-time", level);
+    sprintf(path, "%s/time", level);
     if (f.init(TXL_SavePath(path), 'w')) {
       int tmp = INT_MAX;
       f.write(&tmp, sizeof(tmp));
       f.close();
-    }
+    }*/
+    char path[64];
+    sprintf(path, "%s/time", level);
+    TXL_RemoveFile(TXL_SavePath(path));
+    sprintf(path, "%s/play", level);
+    TXL_RemoveFile(TXL_SavePath(path));
+    TXL_RemoveDir(TXL_SavePath(level));
     return new LevelSelectState;
   }
   return nullptr;
@@ -226,7 +233,7 @@ bool LevelSelectState::init() {
   }
   
   char path[64];
-  sprintf(path, "%s-time", levelList[0]);
+  sprintf(path, "%s/time", levelList[0]);
   if (f.init(TXL_SavePath(path), 'r')) {
     f.read(&stageTime, sizeof(stageTime));
     f.close();
@@ -245,7 +252,7 @@ BaseState *LevelSelectState::update(TXL_Controller *ctrls[4]) {
   if (lSL != selectedLevel) {
     TXL_File f;
     char path[64];
-    sprintf(path, "%s-time", levelList[selectedLevel]);
+    sprintf(path, "%s/time", levelList[selectedLevel]);
     if (f.init(TXL_SavePath(path), 'r')) {
       f.read(&stageTime, sizeof(stageTime));
       f.close();
