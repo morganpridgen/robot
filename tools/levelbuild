@@ -46,10 +46,13 @@ def genTerrain(surf, top):
     while len(out[i]) < d: out[i].append((0, colorToType((255, 255, 255))))
     while len(out[i]) > d: out[i].pop(-1)
     for j in range(d - 1, -1, -1):
-      if out[i][j][1] != colorToType((255, 255, 255)):
+      """if out[i][j][1] != colorToType((255, 255, 255)):
         if top and out[i][j][1] == colorToType((0, 0, 0)): out[i][j] = (0, colorToType((255, 255, 255)))
         break
-      out[i][j] = (0, colorToType((255, 255, 255)))
+      out[i][j] = (0, colorToType((255, 255, 255)))"""
+      if top and out[i][j][1] == colorToType((0, 0, 0)): out[i][j] = (0, colorToType((255, 255, 255)))
+      elif not top and out[i][j][1] == colorToType((255, 255, 255)): out[i][j] = (0, colorToType((255, 255, 255)))
+      else: break
   return out
 
 def colorToType(color):

@@ -27,7 +27,7 @@ for i in files:
     if os.system(compCmd): sys.exit(1)
 os.chdir("../")
 if sys.platform.startswith("linux"): linkCmd = "g++ -Wl,-rpath,lib src/%s/*.o -Llib -ltexel -o %s" % (compDir, exeName)
-elif sys.platform.startswith("win32"): linkCmd = "g++ -Wl,--subsystem,windows src/%s/*.o winstuff.res -LA:\\texel\\lib\\windows -lmingw32 -lSDL2main -lSDL2 -ltexel -o %s" % (compDir, exeName)
+elif sys.platform.startswith("win32"): linkCmd = "g++ -Wl,--subsystem,windows src/%s/*.o -LA:\\texel\\lib\\windows -lmingw32 -lSDL2main -lSDL2 -ltexel -o %s" % (compDir, exeName)
 os.system(linkCmd)
 
 os.chdir("../")

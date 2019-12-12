@@ -3,3 +3,5 @@ lib
 robot
 src/linux
 src/windows
+*.dll
+*.exe
