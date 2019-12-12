@@ -45,12 +45,13 @@ void GameState::render() {
 void GameState::renderHud() {
   char timer[9];
   sprintf(timer, "%02i:%05.2f", gameTimer / 3600, fmod(gameTimer, 3600) / 60.0f);
-  TXL_Texture *timerTex = TXL_RenderText(timer, 1.0f, 1.0f, 1.0f);
-  timerTex->setColorMod(0.625f, 0.625f, 0.625f);
-  for (int i = 0; i < 9; i++) timerTex->render(641.0f - 16.0f - timerTex->width() / 2.0f - (i % 3), 17.0f + timerTex->height() / 2.0f - (i / 3));
-  timerTex->setColorMod(1.0f, 1.0f, 1.0f);
-  timerTex->render(640.0f - 16.0f - timerTex->width() / 2.0f, 16.0f + timerTex->height() / 2.0f);
-  delete timerTex;
+  TXL_Texture timerTex;
+  TXL_RenderText(&timerTex, timer, 1.0f, 1.0f, 1.0f);
+  timerTex.setColorMod(0.625f, 0.625f, 0.625f);
+  for (int i = 0; i < 9; i++) timerTex.render(641.0f - 16.0f - timerTex.width() / 2.0f - (i % 3), 17.0f + timerTex.height() / 2.0f - (i / 3));
+  timerTex.setColorMod(1.0f, 1.0f, 1.0f);
+  timerTex.render(640.0f - 16.0f - timerTex.width() / 2.0f, 16.0f + timerTex.height() / 2.0f);
+  timerTex.free();
 }
 
 void GameState::end() {
@@ -120,11 +121,13 @@ void PlayState::render() {
   renderParticles(cX, cY);
   renderHud();
   if (highScore) {
-    TXL_Texture *winTex = TXL_RenderText("New Record!", 1.0f, 1.0f, 1.0f);
-    winTex->setColorMod(0.625f, 0.625f, 0.625f);
-    for (int i = 0; i < 9; i++) winTex->render(321.0f - (i % 3), 181.0f - (i / 3));
-    winTex->setColorMod(1.0f, 1.0f, 1.0f);
-    winTex->render(320.0f, 180.0f);
+    TXL_Texture winTex;
+    TXL_RenderText(&winTex, "New Record!", 1.0f, 1.0f, 1.0f);
+    winTex.setColorMod(0.625f, 0.625f, 0.625f);
+    for (int i = 0; i < 9; i++) winTex.render(321.0f - (i % 3), 181.0f - (i / 3));
+    winTex.setColorMod(1.0f, 1.0f, 1.0f);
+    winTex.render(320.0f, 180.0f);
+    winTex.free();
   }
 }
 
@@ -196,11 +199,13 @@ BaseState *ReplayState::update(TXL_Controller *ctrls[4]) {
 void ReplayState::render() {
   GameState::render();
   if (highScoreReplay) {
-    TXL_Texture *winTex = TXL_RenderText("New Record!", 1.0f, 1.0f, 1.0f);
-    winTex->setColorMod(0.625f, 0.625f, 0.625f);
-    for (int i = 0; i < 9; i++) winTex->render(321.0f - (i % 3), 181.0f - (i / 3));
-    winTex->setColorMod(1.0f, 1.0f, 1.0f);
-    winTex->render(320.0f, 180.0f);
+    TXL_Texture winTex;
+    TXL_RenderText(&winTex, "New Record!", 1.0f, 1.0f, 1.0f);
+    winTex.setColorMod(0.625f, 0.625f, 0.625f);
+    for (int i = 0; i < 9; i++) winTex.render(321.0f - (i % 3), 181.0f - (i / 3));
+    winTex.setColorMod(1.0f, 1.0f, 1.0f);
+    winTex.render(320.0f, 180.0f);
+    winTex.free();
   }
 }
 
@@ -272,20 +277,23 @@ BaseState *LevelSelectState::update(TXL_Controller *ctrls[4]) {
 }
 
 void LevelSelectState::render() {
-  TXL_Texture *levelTex = TXL_RenderText(levelList[selectedLevel], 1.0f, 1.0f, 1.0f);
-  levelTex->setColorMod(0.625f, 0.625f, 0.625f);
-  for (int i = 0; i < 9; i++) levelTex->render(321.0f - (i % 3), 181.0f - (i / 3));
-  levelTex->setColorMod(1.0f, 1.0f, 1.0f);
-  levelTex->render(320.0f, 180.0f);
-  delete levelTex;
+  TXL_Texture levelTex;
+  TXL_RenderText(&levelTex, levelList[selectedLevel], 1.0f, 1.0f, 1.0f);
+  levelTex.setColorMod(0.625f, 0.625f, 0.625f);
+  for (int i = 0; i < 9; i++) levelTex.render(321.0f - (i % 3), 181.0f - (i / 3));
+  levelTex.setColorMod(1.0f, 1.0f, 1.0f);
+  levelTex.render(320.0f, 180.0f);
+  levelTex.free();
   
   char time[32] = "No record";
   if (stageTime != INT_MAX) sprintf(time, "Fastest time: %02i:%05.2f", stageTime / 3600, fmod(stageTime, 3600) / 60.0f);
-  TXL_Texture *timeTex = TXL_RenderText(time, 1.0f, 1.0f, 1.0f);
-  timeTex->setColorMod(0.625f, 0.625f, 0.625f);
-  for (int i = 0; i < 9; i++) timeTex->render(321.0f - (i % 3), 271.0f - (i / 3));
-  timeTex->setColorMod(1.0f, 1.0f, 1.0f);
-  timeTex->render(320.0f, 270.0f);
+  TXL_Texture timeTex;
+  TXL_RenderText(&timeTex, time, 1.0f, 1.0f, 1.0f);
+  timeTex.setColorMod(0.625f, 0.625f, 0.625f);
+  for (int i = 0; i < 9; i++) timeTex.render(321.0f - (i % 3), 271.0f - (i / 3));
+  timeTex.setColorMod(1.0f, 1.0f, 1.0f);
+  timeTex.render(320.0f, 270.0f);
+  timeTex.free();
 }
 
 void LevelSelectState::end() {
