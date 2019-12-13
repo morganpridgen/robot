@@ -4,6 +4,9 @@
 #include <climits>
 #include <TEXEL/texel.h>
 #include "particle.h"
+#include "serverinter.h"
+
+bool activeServer = 0;
 
 char level[64];
 bool highScoreReplay = 0;
@@ -111,6 +114,7 @@ BaseState *PlayState::update(TXL_Controller *ctrls[4]) {
     enemyRobot.setPos(pX, pY);
   }
   firstLoop = 0;
+  
   return nullptr;
 }
 
@@ -149,6 +153,22 @@ void PlayState::end() {
         while (recording.read(&tmp, sizeof(tmp))) f.write(&tmp, sizeof(tmp));
         f.close();
       }
+      
+      recording.close();
+    }
+    if (activeServer && recording.init(TXL_SavePath(".tmp"), 'r')) {
+      WriteReq wreq;
+      strcpy(wreq.lvlName, level);
+      wreq.time = gameTimer;
+      wreq.data = new Inputs[gameTimer];
+      for (int i = 0; i < gameTimer; i++) {
+        recording.read(&wreq.data[i].aX, sizeof(wreq.data[i].aX));
+        recording.read(&wreq.data[i].aY, sizeof(wreq.data[i].aY));
+        recording.read(&wreq.data[i].bJ, sizeof(wreq.data[i].bJ));
+        recording.read(&wreq.data[i].bR, sizeof(wreq.data[i].bR));
+      }
+      sendPlay(&wreq);
+      delete [] wreq.data;
       recording.close();
     }
   }

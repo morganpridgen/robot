@@ -5,6 +5,8 @@
 #include "level.h"
 #include "ctrlmodule.h"
 
+extern bool activeServer;
+
 class BaseState {
   public:
     virtual bool init() = 0;

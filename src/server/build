@@ -1,0 +1,2 @@
+#!/bin/bash
+g++ -ggdb *.cpp -o robotserver -O2 -lpthread

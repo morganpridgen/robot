@@ -1,5 +1,6 @@
 #include <TEXEL/texel.h>
 #include "state.h"
+#include "serverinter.h"
 
 bool init();
 void update();
@@ -49,6 +50,7 @@ bool init() {
   
   state = new InitState;
   if (!state->init()) return 0;
+  activeServer = initInet();
   return 1;
 }
 
@@ -61,6 +63,7 @@ void update() {
     state = newState;
     if (!state->init()) loop = 0;
     stateChange = 1;
+    activeServer = initInet();
   }
 }
 
