@@ -5,3 +5,4 @@ src/linux
 src/windows
 *.dll
 *.exe
+src/robotserver/robotserver

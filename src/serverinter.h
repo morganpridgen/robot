@@ -1,7 +1,7 @@
 #ifndef serverinterh
 #define serverinterh
 
-#include "server/comm.h"
+#include "robotserver/comm.h"
 
 bool initInet();
 ReadResp *getPlay(const char*);

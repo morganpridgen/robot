@@ -18,6 +18,13 @@ bool initInet() {
   f.close();
   TXL_Socket s;
   if (!s.init(address)) return 0;
+  char in[9];
+  in[8] = 0;
+  for (int i = 0; i < 8; i++) s.read(in + i, sizeof(in[i]));
+  if (strcmp(sig, in) != 0) {
+    s.end();
+    return 0;
+  }
   char req = CPING;
   s.write(&req, sizeof(req));
   char resp;
@@ -36,6 +43,13 @@ ReadResp *getPlay(const char *lvl) {
   ReadReq rreq;
   TXL_Socket s;
   if (!s.init(address)) return nullptr;
+  char in[9];
+  in[8] = 0;
+  for (int i = 0; i < 8; i++) s.read(in + i, sizeof(in[i]));
+  if (strcmp(sig, in) != 0) {
+    s.end();
+    return nullptr;
+  }
   char req = CREAD;
   s.write(&req, sizeof(req));
   char resp;
@@ -68,6 +82,13 @@ ReadResp *getPlay(const char *lvl) {
 char sendPlay(WriteReq *wreq) {
   TXL_Socket s;
   if (!s.init(address)) return CERROR;
+  char in[9];
+  in[8] = 0;
+  for (int i = 0; i < 8; i++) s.read(in + i, sizeof(in[i]));
+  if (strcmp(sig, in) != 0) {
+    s.end();
+    return CERROR;
+  }
   char req = CWRITE;
   s.write(&req, sizeof(req));
   char resp;
