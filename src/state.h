@@ -55,6 +55,12 @@ class ReplayState : public GameState {
     virtual void end();
 };
 
+class InternetReplayState : public ReplayState {
+  public:
+    virtual bool init();
+    virtual BaseState *update(TXL_Controller*[4]);
+};
+
 class LevelSelectState : public BaseState {
   private:
     char **levelList;

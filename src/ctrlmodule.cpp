@@ -1,5 +1,6 @@
 #include "ctrlmodule.h"
 #include <climits>
+#include "serverinter.h"
 
 PlayerCtrlModule::PlayerCtrlModule() {
   joyX = 0.0f, joyY = 0.0f;
@@ -122,4 +123,23 @@ bool RecordedCtrlModule::lRun() {
 
 void RecordedCtrlModule::rumble(float nRPow, int nRTime) {
   
+}
+
+
+bool InternetCtrlModule::init(char *level) {
+  ReadResp *gameplay = getPlay(level);
+  if (gameplay == nullptr) return 0;
+  playLen = gameplay->time;
+  inputs = new Input[playLen];
+  for (int i = 0; i < playLen; i++) {
+    inputs[i].jX = gameplay->data[i].aX;
+    inputs[i].jY = gameplay->data[i].aY;
+    inputs[i].bJ = gameplay->data[i].bJ;
+    inputs[i].bR = gameplay->data[i].bR;
+  }
+  
+  timer = 0;
+  joyX = 0.0f, joyY = 0.0f;
+  bJ = 0, lBJ = 0, bR = 0, lBR = 0;
+  return 1;
 }

@@ -41,7 +41,7 @@
 #define WNOHIGH 'B'
 #define WERROR 'X'
 
-char sig[] = "RBTSVR00";
+const char sig[] = "RBTSVR00";
 
 struct Inputs {
   float aX, aY;

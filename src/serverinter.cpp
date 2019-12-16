@@ -35,10 +35,9 @@ bool initInet() {
 
 ReadResp *getPlay(const char *lvl) {
   static ReadResp rresp;
-  static Inputs *data = nullptr;
-  if (data) {
-    delete [] data;
-    data = nullptr;
+  if (rresp.data) {
+    delete [] rresp.data;
+    rresp.data = nullptr;
   }
   ReadReq rreq;
   TXL_Socket s;
@@ -61,20 +60,19 @@ ReadResp *getPlay(const char *lvl) {
     if (resp == ROK) {
       s.read(&rresp.time, sizeof(rresp.time));
       TXL_FlipEndian(&rresp.time, sizeof(rresp.time));
-      data = new Inputs[rresp.time];
-      rresp.data = data;
+      rresp.data = new Inputs[rresp.time];
       for (int i = 0; i < rresp.time; i++) {
-        s.read(&data[i].aX, sizeof(data[i].aX));
-        s.read(&data[i].aY, sizeof(data[i].aY));
-        s.read(&data[i].bJ, sizeof(data[i].bJ));
-        s.read(&data[i].bR, sizeof(data[i].bR));
-        TXL_FlipEndian(&data[i].aX, sizeof(data[i].aX));
-        TXL_FlipEndian(&data[i].aY, sizeof(data[i].aY));
-        TXL_FlipEndian(&data[i].bJ, sizeof(data[i].bJ));
-        TXL_FlipEndian(&data[i].bR, sizeof(data[i].bR));
+        s.read(&rresp.data[i].aX, sizeof(rresp.data[i].aX));
+        s.read(&rresp.data[i].aY, sizeof(rresp.data[i].aY));
+        s.read(&rresp.data[i].bJ, sizeof(rresp.data[i].bJ));
+        s.read(&rresp.data[i].bR, sizeof(rresp.data[i].bR));
+        TXL_FlipEndian(&rresp.data[i].aX, sizeof(rresp.data[i].aX));
+        TXL_FlipEndian(&rresp.data[i].aY, sizeof(rresp.data[i].aY));
+        TXL_FlipEndian(&rresp.data[i].bJ, sizeof(rresp.data[i].bJ));
+        TXL_FlipEndian(&rresp.data[i].bR, sizeof(rresp.data[i].bR));
       }
-    }
-  }
+    } else return nullptr;
+  } else return nullptr;
   s.end();
   return &rresp;
 }

@@ -235,6 +235,24 @@ void ReplayState::end() {
 }
 
 
+bool InternetReplayState::init() {
+  if (!GameState::init()) return 0;
+  ctrlModule = new InternetCtrlModule;
+  if (!((InternetCtrlModule*)ctrlModule)->init(level)) return 0;
+  skipLoop = 5;
+  return 1;
+}
+
+BaseState *InternetReplayState::update(TXL_Controller *ctrls[4]) {
+  if (skipLoop) skipLoop--;
+  else ctrlModule->update(nullptr);
+  if (engine()) {
+    if (robot.getFinished()) return new LevelSelectState;
+  }
+  return nullptr;
+}
+
+
 
 bool LevelSelectState::init() {
   char tmpLevels[64][64];
@@ -290,6 +308,10 @@ BaseState *LevelSelectState::update(TXL_Controller *ctrls[4]) {
   if (ctrls[0]->buttonRelease(CtrlX)) {
     strcpy(level, levelList[selectedLevel]);
     return new ReplayState;
+  }
+  if (ctrls[0]->buttonRelease(CtrlY) && activeServer) {
+    strcpy(level, levelList[selectedLevel]);
+    return new InternetReplayState;
   }
   
   lSL = selectedLevel;

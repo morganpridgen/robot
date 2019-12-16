@@ -62,14 +62,14 @@ void *handleReq(void *data) {
 void handleRead(ClientInfo client) {
   ReadReq rreq;
   for (int i = 0; i < 64; i++) recv(client.cs, rreq.lvlName + i, sizeof(rreq.lvlName[i]), 0);
-  printf("(%010i)read request for level \"%s\"\n", client.id, rreq.lvlName);
+  printf("(%010i) read request for level \"%s\"\n", client.id, rreq.lvlName);
   
   ReadResp rresp;
   char resp = getData(client, rreq, &rresp);
   send(client.cs, &resp, sizeof(resp), 0);
   if (resp == ROK) {
     send(client.cs, &rresp.time, sizeof(rresp.time), 0);
-    for (int i = 0; i < rresp.time; i++) {
+    for (int i = 0; i < ntohl(rresp.time); i++) {
       send(client.cs, &rresp.data[i].aX, sizeof(rresp.data[i].aX), 0);
       send(client.cs, &rresp.data[i].aY, sizeof(rresp.data[i].aY), 0);
       send(client.cs, &rresp.data[i].bJ, sizeof(rresp.data[i].bJ), 0);
@@ -98,6 +98,7 @@ char getData(ClientInfo client, ReadReq rreq, ReadResp* rresp) {
   }
   fread(&rresp->time, sizeof(rresp->time), 1, f);
   fclose(f);
+  printf("(%010i) length of play is %i\n", client.id, ntohl(rresp->time));
   sprintf(filePath, "%s/play", path);
   f = fopen(filePath, "rb");
   if (f == nullptr) {
@@ -119,6 +120,7 @@ void handleWrite(ClientInfo client) {
   WriteReq wreq;
   for (int i = 0; i < 64; i++) recv(client.cs, wreq.lvlName + i, sizeof(wreq.lvlName[i]), 0);
   recv(client.cs, &wreq.time, sizeof(wreq.time), 0);
+  printf("(%010i) length of requested new record is %i\n", client.id, ntohl(wreq.time));
   printf("(%010i) write request for level \"%s\"\n", client.id, wreq.lvlName);
   char resp = timeOk(client, wreq);
   send(client.cs, &resp, sizeof(&resp), 0);

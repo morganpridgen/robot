@@ -63,4 +63,9 @@ class RecordedCtrlModule : public CtrlModule {
     virtual bool isReplay() {return 1;}
 };
 
+class InternetCtrlModule : public RecordedCtrlModule {
+  public:
+    bool init(char*);
+};
+
 #endif
