@@ -50,7 +50,6 @@ bool init() {
   
   state = new InitState;
   if (!state->init()) return 0;
-  activeServer = initInet();
   return 1;
 }
 

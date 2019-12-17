@@ -82,6 +82,10 @@ bool PlayState::init() {
 }
 
 BaseState *PlayState::update(TXL_Controller *ctrls[4]) {
+  if (engine()) {
+    if (robot.getFinished()) return highScore ? (BaseState*)(new ReplayState) : (BaseState*)(new LevelSelectState);
+    return new PlayState;
+  }
   if (timerStart && enemyModule) {
     enemyModule->update(nullptr);
     enemyRobot.update(enemyModule, lvl);
@@ -103,10 +107,6 @@ BaseState *PlayState::update(TXL_Controller *ctrls[4]) {
     }
     highScoreReplay = highScore;
     lastFinish = 1;
-  }
-  if (engine()) {
-    if (robot.getFinished()) return highScore ? (BaseState*)(new ReplayState) : (BaseState*)(new LevelSelectState);
-    return new PlayState;
   }
   if (firstLoop) {
     float pX, pY;
