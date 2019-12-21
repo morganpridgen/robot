@@ -21,7 +21,7 @@ class Robot {
     void motionCalc(CtrlModule*);
     void colCalc(CtrlModule*, Level&);
     bool isInFloor(float, float, Level&);
-    float lLR, rLR, tLLR, tRLR, lAnim;
+    float fLLR, fRLR, bLLR, bRLR, lAnim;
     bool lLOff, rLOff;
     void lUpdate();
     bool isReplay;
@@ -34,6 +34,7 @@ class Robot {
     
     void getPos(float &x, float &y) {x = info.x, y = info.y;}
     void setPos(float x, float y) {info.x = x, info.y = y;}
+    RobotInfo getInfo() {return info;}
     void modCam(float&, float&, Level&);
     bool getDead() {return dead;}
     bool getFinished() {return finished;}

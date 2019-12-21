@@ -18,7 +18,7 @@ bool Robot::init() {
   info.grounded = 0;
   info.djCharge = 0;
   dead = 0, finished = 0, dir = 0;
-  lLR = 0.0f, rLR = 0.0f, tLLR = 0.0f, tRLR = 0.0f, lAnim = 0.0f;
+  fLLR = 0.0f, fRLR = 0.0f, bLLR = 0.0f, bRLR = 0.0f, lAnim = 0.0f;
   isReplay = 0;
   deathTimer = 0;
   return 1;
@@ -64,7 +64,7 @@ void Robot::update(CtrlModule *ctrl, Level &lvl) {
     if (deathTimer % 2) TXL_PlaySound(explodeSnd);
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 32; j++) {
-        if ((i + j + deathTimer) % 8 == 0)addParticle({info.x, info.y, (2 + i) * cos((j + deathTimer % 2) * 3.14f / 16.0f), (2 + i) * sin((j + deathTimer % 2) * 3.14f / 16.0f), 30, 1.0f, float(i) / 2.0f, 0.0f, 0.5f, 2.0f});
+        if ((i + j + deathTimer) % 8 == 0) addParticle({info.x, info.y, (2 + i) * cos((j + deathTimer % 2) * 3.14f / 16.0f), (2 + i) * sin((j + deathTimer % 2) * 3.14f / 16.0f), 30, 1.0f, float(i) / 2.0f, 0.0f, 0.5f, 2.0f});
       }
     }
     deathTimer++;
@@ -136,9 +136,11 @@ void Robot::render(float cX, float cY) {
   if (deathTimer >= 15) return;
   robotTex.setColorMod(float(2 - isReplay) / 2.0f);
   robotTex.setClip(16, 24, 0, 16);
-  robotTex.render(info.x - cX - limbXOff, info.y - cY - 8 + limbYOff, lLR);
+  robotTex.render(info.x - cX - limbXOff, info.y - cY - 8 + limbYOff, 0.9f, 0.9f, bLLR);
+  robotTex.render(info.x - cX - limbXOff, info.y - cY - 8 + limbYOff, fLLR);
   robotTex.setClip(24, 16, 0, 16);
-  robotTex.render(info.x - cX + limbXOff, info.y - cY - 8 + limbYOff, rLR);
+  robotTex.render(info.x - cX + limbXOff, info.y - cY - 8 + limbYOff, 0.9f, 0.9f, bRLR);
+  robotTex.render(info.x - cX + limbXOff, info.y - cY - 8 + limbYOff, fRLR);
   robotTex.setClip(16 * dir, 16 * !dir, 0, 16);
   robotTex.render(info.x - cX, info.y - cY - 8.0f + (info.xV / 8.0f) * (sin(lAnim * 1.57f / 8.0f) + cos(lAnim * 1.57f / 8.0f)));
 }
@@ -149,29 +151,38 @@ void Robot::end() {
 
 void Robot::modCam(float &cX, float &cY, Level &lvl) {
   cX += (info.x - cX - float(320 + 80 * (info.xV / -8))) / 8.0f;
-  cY += (info.gY - cY - 225.0f) / 8.0f;
+  cY += ((dead ? info.y : info.gY) - cY - 225.0f) / 8.0f;
   lvl.modCam(cX, cY, info.x, info.y);
 }
 
 void Robot::lUpdate() {
+  float tFLLR, tFRLR, tBLLR, tBRLR;
   if (!info.grounded) {
     lAnim = 0;
-    tLLR = 30.0f, tRLR = -30.0f;
+    tFLLR = 30.0f, tFRLR = -30.0f, tBLLR = 15.0f, tBRLR = -15.0f;
   } else {
     if (info.xV > 0.0f) {
       lAnim += info.xV / 8.0f;
-      tLLR = 30.0f * sin(lAnim * 1.57f / 4.0f);
-      tRLR = 30.0f * cos(lAnim * 1.57f / 4.0f);
+      tFLLR = 30.0f * sin(lAnim * 1.57f / 4.0f);
+      tFRLR = 30.0f * cos(lAnim * 1.57f / 4.0f);
+      tBLLR = -30.0f * sin(lAnim * 1.57f / 4.0f);
+      tBRLR = -30.0f * cos(lAnim * 1.57f / 4.0f);
     } else if (info.xV < 0.0f) {
       lAnim -= info.xV / 8.0f;
-      tLLR = -30.0f * cos(lAnim * 1.57f / 4.0f);
-      tRLR = -30.0f * sin(lAnim * 1.57f / 4.0f);
+      tFLLR = -30.0f * cos(lAnim * 1.57f / 4.0f);
+      tFRLR = -30.0f * sin(lAnim * 1.57f / 4.0f);
+      tBLLR = 30.0f * cos(lAnim * 1.57f / 4.0f);
+      tBRLR = 30.0f * sin(lAnim * 1.57f / 4.0f);
     } else {
       lAnim = 0;
-      tLLR = -30.0f * lLOff;
-      tRLR = 30.0f * rLOff;
+      tFLLR = -30.0f * lLOff;
+      tFRLR = 30.0f * rLOff;
+      tBLLR = -30.0f * lLOff;
+      tBRLR = 30.0f * rLOff;
     }
   }
-  lLR += (tLLR - lLR) / 4.0f;
-  rLR += (tRLR - rLR) / 4.0f;
+  fLLR += (tFLLR - fLLR) / 4.0f;
+  fRLR += (tFRLR - fRLR) / 4.0f;
+  bLLR += (tBLLR / 2.0f - bLLR) / 4.0f;
+  bRLR += (tBRLR / 2.0f - bRLR) / 4.0f;
 }

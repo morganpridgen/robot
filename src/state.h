@@ -38,6 +38,7 @@ class PlayState : public GameState {
     bool lastFinish, highScore, firstLoop;
     Robot enemyRobot;
     CtrlModule *enemyModule;
+    virtual void renderHud();
   public:
     virtual bool init();
     virtual BaseState *update(TXL_Controller*[4]);
@@ -48,6 +49,7 @@ class PlayState : public GameState {
 class ReplayState : public GameState {
   protected:
     int skipLoop;
+    virtual void renderHud();
   public:
     virtual bool init();
     virtual BaseState *update(TXL_Controller*[4]);

@@ -1,8 +1,5 @@
-build-win.bat
-lib
 robot
+robot.exe
 src/linux
 src/windows
-*.dll
-*.exe
 src/robotserver/robotserver

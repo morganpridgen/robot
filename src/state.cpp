@@ -46,14 +46,17 @@ void GameState::render() {
 }
 
 void GameState::renderHud() {
+  TXL_RenderQuad(320, 14, 640, 30, {0.125f, 0.125f, 0.125f, 0.75f});
+  TXL_RenderQuad(320, 30, 640, 4, {0.625f, 0.625f, 0.625f, 0.75f});
+  
   char timer[9];
   sprintf(timer, "%02i:%05.2f", gameTimer / 3600, fmod(gameTimer, 3600) / 60.0f);
   TXL_Texture timerTex;
   TXL_RenderText(&timerTex, timer, 1.0f, 1.0f, 1.0f);
   timerTex.setColorMod(0.625f, 0.625f, 0.625f);
-  for (int i = 0; i < 9; i++) timerTex.render(641.0f - 16.0f - timerTex.width() / 2.0f - (i % 3), 17.0f + timerTex.height() / 2.0f - (i / 3));
+  for (int i = 0; i < 9; i++) timerTex.render(641.0f - 8.0f - timerTex.width() / 2.0f - (i % 3), 9.0f + timerTex.height() / 2.0f - (i / 3));
   timerTex.setColorMod(1.0f, 1.0f, 1.0f);
-  timerTex.render(640.0f - 16.0f - timerTex.width() / 2.0f, 16.0f + timerTex.height() / 2.0f);
+  timerTex.render(640.0f - 8.0f - timerTex.width() / 2.0f, 8.0f + timerTex.height() / 2.0f);
   timerTex.free();
 }
 
@@ -112,8 +115,8 @@ BaseState *PlayState::update(TXL_Controller *ctrls[4]) {
     float pX, pY;
     robot.getPos(pX, pY);
     enemyRobot.setPos(pX, pY);
+    firstLoop = 0;
   }
-  firstLoop = 0;
   
   return nullptr;
 }
@@ -133,6 +136,10 @@ void PlayState::render() {
     winTex.render(320.0f, 180.0f);
     winTex.free();
   }
+}
+
+void PlayState::renderHud() {
+  GameState::renderHud();
 }
 
 void PlayState::end() {
@@ -218,7 +225,7 @@ BaseState *ReplayState::update(TXL_Controller *ctrls[4]) {
 
 void ReplayState::render() {
   GameState::render();
-  if (highScoreReplay) {
+  if (highScoreReplay && (robot.getFinished() || (gameTimer / 16) % 2 == 0)) {
     TXL_Texture winTex;
     TXL_RenderText(&winTex, "New Record!", 1.0f, 1.0f, 1.0f);
     winTex.setColorMod(0.625f, 0.625f, 0.625f);
@@ -227,6 +234,28 @@ void ReplayState::render() {
     winTex.render(320.0f, 180.0f);
     winTex.free();
   }
+}
+
+void ReplayState::renderHud() {
+  TXL_Color outCol = {0.125f, 0.125f, 0.125f, 0.75f}, inCol = {0.625f, 0.625f, 0.625f, 0.75f};
+  TXL_RenderQuad(320, 14, 640, 28, outCol);
+  TXL_RenderQuad(14, 180, 28, 360 - 2 * 28, outCol);
+  TXL_RenderQuad(320, 360 - 14, 640, 28, outCol);
+  TXL_RenderQuad(640 - 14, 180, 28, 360 - 2 * 28, outCol);
+  TXL_RenderQuad(320, 30, 640 - 2 * 28, 4, inCol);
+  TXL_RenderQuad(30, 180, 4, 360 - 2 * 28 - 8, inCol);
+  TXL_RenderQuad(320, 360 - 30, 640 - 2 * 28, 4, inCol);
+  TXL_RenderQuad(640 - 30, 180, 4, 360 - 2 * 28 - 8, inCol);
+  
+  char timer[9];
+  sprintf(timer, "%02i:%05.2f", gameTimer / 3600, fmod(gameTimer, 3600) / 60.0f);
+  TXL_Texture timerTex;
+  TXL_RenderText(&timerTex, timer, 1.0f, 1.0f, 1.0f);
+  timerTex.setColorMod(0.625f, 0.625f, 0.625f);
+  for (int i = 0; i < 9; i++) timerTex.render(641.0f - 8.0f - timerTex.width() / 2.0f - (i % 3), 9.0f + timerTex.height() / 2.0f - (i / 3));
+  timerTex.setColorMod(1.0f, 1.0f, 1.0f);
+  timerTex.render(640.0f - 8.0f - timerTex.width() / 2.0f, 8.0f + timerTex.height() / 2.0f);
+  timerTex.free();
 }
 
 void ReplayState::end() {

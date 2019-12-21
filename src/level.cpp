@@ -98,7 +98,6 @@ void Level::render(float cX, float cY) {
       }
     }
   }
-  terrainTex.setColorMod(1.0f, 1.0f, 1.0f);
   
   for (int i = cX / tileSize; i < (cX + 640.0f) / tileSize; i++) {
     int height = 0;
@@ -108,26 +107,30 @@ void Level::render(float cX, float cY) {
         continue;
       }
       for (int k = 0; k < terrain[i * depth + j].len; k++) {
+        float tX = i * tileSize + 16 - cX, tY = 360.0f - ((k + height + 1) * tileSize) + 16 - cY;
         switch (terrain[i * depth + j].type) {
           case 'S': {
+            float b = sin((i + k + height) * 3.14f / 16.0f) / 8.0f + 0.875f;
+            terrainTex.setColorMod(b / 2.0f, b / 3.0f, 0);
             terrainTex.setClip(0, 32, 0, 32);
-            terrainTex.render(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY);
+            terrainTex.render(tX, tY);
             terrainTex.setClip(32, 64, 0, 32);
-            terrainTex.render(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY, animTimer * (((i + k + height) % 2) ? -1 : 1));
+            terrainTex.render(tX, tY, animTimer * (((i + k + height) % 2) ? -1 : 1));
             break;
           }
           case 'L': {
+            terrainTex.setColorMod(0.875f, 0.875f, 0.875f);
             terrainTex.setClip(0, 32, 32, 64);
-            terrainTex.render(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY);
+            terrainTex.render(tX, tY);
             terrainTex.setClip(32, 64, 32, 64);
             char belowType = typeAt(i, k + height);
-            if (belowType == 'S' || belowType == 'L') terrainTex.render(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY, 0);
+            if (belowType == 'S' || belowType == 'L') terrainTex.render(tX, tY, 0);
             char leftType = typeAt(i - 1, k + height + 1);
-            if (leftType == 'S' || leftType == 'L') terrainTex.render(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY, 90);
+            if (leftType == 'S' || leftType == 'L') terrainTex.render(tX, tY, 90);
             char aboveType = typeAt(i, k + height + 2);
-            if (aboveType == 'S' || aboveType == 'L') terrainTex.render(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY, 180);
+            if (aboveType == 'S' || aboveType == 'L') terrainTex.render(tX, tY, 180);
             char rightType = typeAt(i + 1, k + height + 1);
-            if (rightType == 'S' || rightType == 'L') terrainTex.render(i * tileSize + 16 - cX, 360.0f - ((k + height + 1) * tileSize) + 16 - cY, 270);
+            if (rightType == 'S' || rightType == 'L') terrainTex.render(tX, tY, 270);
             break;
           }
         }
@@ -136,6 +139,8 @@ void Level::render(float cX, float cY) {
     }
     if (solidTop) {
       while ((height * tileSize) + cY < 360) {
+        float b = sin((i + height) * 3.14f / 16.0f) / 8.0f + 0.875f;
+        terrainTex.setColorMod(b / 2.0f, b / 3.0f, 0);
         terrainTex.setClip(0, 32, 0, 32);
         terrainTex.render(i * tileSize + 16 - cX, 360.0f - ((height + 1) * tileSize) + 16 - cY);
         terrainTex.setClip(32, 64, 0, 32);
@@ -144,6 +149,7 @@ void Level::render(float cX, float cY) {
       }
     }
   }
+  terrainTex.setColorMod(1.0f, 1.0f, 1.0f);
   terrainTex.setClip(32, 64, 0, 32);
   terrainTex.render(gX * tileSize + 16 - cX, 360.0f - gY * tileSize - 16 - cY, animTimer);
   terrainTex.render(gX * tileSize + 16 - cX, 360.0f - gY * tileSize - 16 - cY, -animTimer);

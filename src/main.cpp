@@ -23,6 +23,7 @@ int main(int argc, char **argv) {
         update();
       } while (stateChange);
       render();
+      disp.refresh();
     }
     end();
     return 0;
@@ -68,7 +69,6 @@ void update() {
 
 void render() {
   state->render();
-  disp.refresh();
 }
 
 void end() {
